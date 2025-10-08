@@ -1,0 +1,6 @@
+authtoken: 33leiRqpGWtKq9SUCP62LYGjM9T_7g5EjQd9hkkxpv4EfzNZ2
+tunnels:
+  myapi:
+    proto: http
+    addr: 8000
+    hostname: irving-uncondoled-wriggly.ngrok-free.dev

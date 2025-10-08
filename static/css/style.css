@@ -1,0 +1,288 @@
+:root{
+  --bg:#0f1724;
+  --card:#0f1420;        /* чуть темнее фона для контейнера */
+  --muted:#9fb0d1;
+  --accent:#60a5fa;
+  --text:#e6eef9;
+  --stat-bg: rgba(255,255,255,0.03); /* немного светлее чем фон */
+  --stat-bg-2: rgba(255,255,255,0.02);
+  --radius:16px;
+  --shadow: 0 14px 40px rgba(2,6,23,0.6);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  background: linear-gradient(180deg,var(--bg),#081021);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.2;
+}
+.container{
+  max-width:920px;
+  margin:48px auto;
+  padding:28px;
+}
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+header h1{
+  margin:0;
+  font-size:32px; /* увеличено */
+  letter-spacing: -0.4px;
+}
+.muted{
+  color:var(--muted);
+  margin-top:6px;
+  font-size:15px;
+}
+.cards{
+  display:flex;
+  gap:18px;
+  margin-top:22px;
+  align-items:stretch;
+}
+.card{
+  flex:1;
+  background:var(--card);
+  padding:20px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,0.03);
+  box-shadow: var(--shadow);
+}
+.cards .stat{
+  flex:1;
+  background: linear-gradient(180deg, var(--stat-bg), var(--stat-bg-2));
+  border-radius:14px;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:6px;
+  min-width:180px;
+  border:1px solid rgba(255,255,255,0.04);
+}
+.card .label{
+  font-size:14px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:0.6px;
+}
+.card .value{
+  font-size:44px; /* увеличено */
+  font-weight:800;
+  margin-top:6px;
+  color:var(--text);
+}
+.raw{
+  margin-top:20px;
+  background:#071025;
+  border-radius:12px;
+  padding:14px;
+  border:1px solid rgba(255,255,255,0.03);
+}
+pre{
+  white-space:pre-wrap;
+  color:#cfe7ff;
+  margin:0;
+}
+footer{
+  display:flex;
+  gap:12px;
+  margin-top:18px;
+}
+.btn{
+  display:inline-block;
+  padding:12px 16px;
+  border-radius:12px;
+  background: linear-gradient(90deg,var(--accent),#3b82f6);
+  color:white;
+  text-decoration:none;
+  font-weight:700;
+  box-shadow: 0 8px 24px rgba(59,130,246,0.14);
+}
+.error{
+  background:#3d1b1b;
+  padding:14px;
+  border-radius:12px;
+  color:#ffdede;
+  margin-top:12px;
+}
+.input-row{display:flex;gap:12px;margin-top:14px}
+input[type="text"]{
+  padding:12px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.04);
+  background: rgba(255,255,255,0.01);
+  color:var(--text);
+  font-size:16px;
+  outline: none;
+}
+button.secondary{
+  background: transparent;
+  color:var(--accent);
+  border:1px solid rgba(96,165,250,0.18);
+  padding:10px 14px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+.label-block{
+  display:block;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+.center{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* force white icons in bottom nav (works for svg/png) */
+.bottom-nav .nav-item img {
+  filter: invert(1) brightness(2);
+  width:22px;
+  height:22px;
+}
+.nav-item.active img {
+  /* трохи яскравіше для активної вкладки */
+  filter: invert(1) brightness(3);
+}
+
+/* клас анімації: обертання по Y */
+@keyframes coinFlip {
+  0% { transform: perspective(600px) rotateX(0) rotateY(0) translateY(-10px); }
+  40% { transform: perspective(600px) rotateX(540deg) rotateY(540deg) translateY(-120px); }
+  100% { transform: perspective(600px) rotateX(1080deg) rotateY(1080deg) translateY(0); }
+}
+.coin-flipping {
+  animation: coinFlip 1.6s cubic-bezier(.2,.9,.2,1);
+}
+
+/* full-bleed: трохи відступу зліва і справа, box-sizing для коректних обчислень */
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  box-sizing: border-box;
+  padding: 12px 16px;   /* вже був; залишаємо невеликий відступ від країв */
+  padding-left: 14px;   /* гарантований невеликий відступ від лівого краю вьюпорта */
+  padding-right: 14px;  /* невеликий відступ від правого краю */
+  background: transparent;
+}
+
+/* картинка-кнопка: зробити блочною, щоб margin працював, і трохи зсунути від лівого краю */
+.game-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding-left: 6px; /* додатковий внутрішній відступ для надійності */
+}
+.game-button img {
+  display: block;       /* запобігає inline-обтікання і проблемам з відступом */
+  width: 25vw;
+  max-width: 220px;
+  min-width: 80px;
+  height: auto;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  background: rgba(255,255,255,0.01);
+  padding: 8px;
+  margin-left: 6px;    /* невеликий гамма-відступ від лівого краю вьюпорта */
+}
+
+/* ------------------ Патч: full-bleed safe inset ------------------ */
+.full-bleed {
+  /* зберігаємо розтяжку, але додаємо невеликий «безпечний» зсув вправо (12px) */
+  width: 100vw;
+  margin-left: calc(50% - 50vw + 12px); /* +12px — невеликий відступ від лівого краю */
+  box-sizing: border-box;
+  /* safe-area паддінги (notch) з фолбеком */
+  padding-left: max(env(safe-area-inset-left, 12px), 12px);
+  padding-right: max(env(safe-area-inset-right, 12px), 12px);
+  padding-top: 12px;
+  padding-bottom: 12px;
+  background: transparent;
+  overflow: visible;
+}
+
+/* Забираємо margin-left у картинки і гарантуємо, що вона не вилізе за padding */
+.game-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding-left: 6px;
+  box-sizing: border-box;
+}
+.game-button img {
+  display: block;
+  width: 25vw;
+  max-width: calc(25vw - 24px); /* враховуємо відступи щоб не вилізти */
+  min-width: 80px;
+  height: auto;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  background: rgba(255,255,255,0.01);
+  padding: 8px;
+  margin: 0;               /* важливо: прибираємо margin-left */
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+/* full-bleed: займає весь viewport мінус "безпечні" відступи (16px з кожного боку) */
+.full-bleed {
+  width: calc(100vw - 32px);   /* по ширині — весь viewport мінус 32px (по 16px зліва/справа) */
+  margin-left: 16px;           /* гарантуємо невеликий відступ від лівого краю */
+  margin-right: 16px;          /* і від правого */
+  box-sizing: border-box;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  /* Якщо у вас є notch-пристрої, можна в майбутньому замінити 16px на env(safe-area-inset-left) */
+}
+
+/* game-button: позбавляємося margin-left, картинка не повинна мати негативних зсувів */
+.game-button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding-left: 0;
+  box-sizing: border-box;
+}
+
+/* картинка: відноситься до контейнера, не виходить за межі */
+.game-button img {
+  display: block;
+  width: 25vw;              /* бажаний розмір відносно viewport */
+  max-width: 220px;         /* максимальна ширина (desktop) */
+  min-width: 80px;          /* мінімальна ширина */
+  height: auto;
+  max-width: 100%;          /* НЕ дозволяємо картинці ширше батька */
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  background: rgba(255,255,255,0.01);
+  margin: 0;
+}
+
+/* мобільні поправки */
+@media (max-width: 420px) {
+  .full-bleed { width: calc(100vw - 24px); margin-left: 12px; margin-right: 12px; }
+  .game-button img { width: 34vw; max-width: calc(34vw - 12px); }
+}

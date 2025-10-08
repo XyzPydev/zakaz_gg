@@ -8,6 +8,7 @@ import threading
 from pathlib import Path
 import random
 import sqlite3
+import webapp
 import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, getcontext
@@ -420,7 +421,7 @@ def get_status(status_id) -> str:
 # -------------- HANDLERS -------------- #
 
 
-@dp.message(lambda message: message.from_user.id not in ADMINS and int(bot.id) == 8375492513)
+#@dp.message(lambda message: message.from_user.id not in ADMINS and int(bot.id) == 8375492513)
 async def handle_message(message: Message):
     return await message.answer(f"В тестовом боте могуть работать только админы!\n\nРазработчик: t.me/sollamon (по вопросам чтобы стать админом писать {html.link("сюда [тык]", "t.me/sollamon")})", disable_web_page_preview=True)
 
@@ -484,10 +485,9 @@ async def start_command(message: Message):
                 except:
                     pass
 
-            return await message.answer(f"🤑 Вы получили {check['per_user']} mDrops по чеку!")
+            return await message.answer(f"🤑 Вы получили <b>{format_balance(int(check['per_user']))}</b> mDrops по чеку!")
 
-        # Обробка реферала
-        # Обробка реферала
+
         referral = arg if arg and not arg.startswith("check_") else None
         if referral and referral != user_id:
             # якщо користувач новий (тільки що створений)
@@ -498,7 +498,7 @@ async def start_command(message: Message):
                     ref_data["referrals"] = ref_data.get("referrals", 0) + 1
                     await save_data(referral, ref_data)
                     try:
-                        await bot.send_message(referral, "🎉 У вас новый реферал! +2500 mDrops.")
+                        await bot.send_message(referral, "<b>🎉 У вас новый реферал!</b>\n\n<i>+2500 mDrops.</i>")
                     except:
                         pass
 
@@ -563,7 +563,7 @@ async def handle_balance(message: Message):
         if not data:
             await create_user_data(user_id)
             data = await load_data(str(message.from_user.id))
-        await message.reply(f"{html.italic(f"💰 {await gsname(message.from_user.first_name, message.from_user.id)}, твой баланс: {format_balance(data['coins'])} mDrops")}\n{gline()}\n\n🎰 Слито: {format_balance(data['lost_coins'])} mDrops")
+        await message.reply(f"{html.italic(f"💰 <b>{await gsname(message.from_user.first_name, message.from_user.id)}</b>, твой баланс: {format_balance(data['coins'])} mDrops")}\n{gline()}\n\n<b>🎰 Слито:</b> {format_balance(data['lost_coins'])} mDrops")
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 103)
 
@@ -579,7 +579,7 @@ async def handle_balance(message: Message):
             data = await load_data(str(message.from_user.id))
 
         clan = data.get("clan", "нету")
-        await message.reply(f"🆔 Профиль: {html.code(message.from_user.id)}\n{gline()}\n├ 👤 {html.italic(html.link(await gsname(message.from_user.first_name, message.from_user.id), f't.me/{message.from_user.username}'))}\n├ ⚡️ {html.italic('Статус:')} {get_status(data['status'])}\n├ 🛡 {html.italic(f'Клан: {clan}')}\n├ 🟢 {html.italic('Выиграно:')} {format_balance(data['won_coins'])} mDrops\n├ 🗿 {html.italic('Проиграно:')} {format_balance(data['lost_coins'])} mDrops\n{gline()}\n💰 {html.italic('Баланс:')} {format_balance(data['coins'])} mDrops\n💎 {html.italic('Баланс:')} {int(data['GGs'])} GGs", disable_web_page_preview=True)
+        await message.reply(f"<b>🆔 Профиль:</b> {html.code(message.from_user.id)}\n{gline()}\n├ 👤 <b>{html.italic(html.link(await gsname(message.from_user.first_name, message.from_user.id), f't.me/{message.from_user.username}'))}</b>\n├ ⚡️ <b>{html.italic('Статус:')}</b> {get_status(data['status'])}\n├ 🛡 {html.italic(f'<b>Клан:</b> {clan}')}\n├ 🟢 <b>{html.italic('Выиграно:')}</b> {format_balance(data['won_coins'])} mDrops\n├ 🗿 <b>{html.italic('Проиграно:')}</b> {format_balance(data['lost_coins'])} mDrops\n{gline()}\n💰 <b>{html.italic('Баланс:')}</b> {format_balance(data['coins'])} mDrops\n💎 <b>{html.italic('Баланс:')}</b> {int(data['GGs'])} GGs", disable_web_page_preview=True)
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 104)
 
@@ -13217,7 +13217,7 @@ async def cmd_list_statuses(message: types.Message):
 # -------------- LAUNCH -------------- #
 
 async def main():
-    #threading.Thread(target=webapp.run_flask, daemon=True).start()
+    threading.Thread(target=webapp.run_flask, daemon=True).start()
     await send_log("Бот запущен")
     asyncio.create_task(periodic_checkpoint())
     await dp.start_polling(bot)

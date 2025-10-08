@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Open App — Redirect</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <h3>Открываем Web App…</h3>
+  <p>Если вы открыли это приложение через Telegram – вы будете автоматически перенаправлены на главную страницу.</p>
+
+  <script>
+    (function() {
+      if (!window.Telegram || !window.Telegram.WebApp) {
+        document.body.innerHTML += "<p>Вы открыли страницу не через Telegram. Пожалуйста, откройте бота в Telegram.</p>";
+        return;
+      }
+      const tg = window.Telegram.WebApp;
+      try { tg.expand(); } catch(e){}
+
+      const user = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+      if (user && user.id) {
+        // редірект на server-side balance view
+        window.location.href = `/balance_view/${user.id}`;
+      } else {
+        document.body.innerHTML += "<p>Не удалось получить ваш Telegram ID. Попытайтесь повторить через меню бота.</p>";
+      }
+    })();
+  </script>
+</body>
+</html>

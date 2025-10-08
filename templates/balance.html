@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Главная — WebApp</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root { --muted:#9aa3b2; --text:#e6eef8; --accent:#60a5fa; --bg:#071123; }
+    html,body{height:100%;margin:0;padding:0}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:Inter,system-ui,Arial,sans-serif;
+      margin:0;
+      padding:0;
+      overflow-x: hidden; /* страховка: не дає горизонтальної прокрутки */
+    }
+
+    .container{max-width:960px;margin:0 auto;padding:16px;box-sizing:border-box}
+    .main-area{min-height:calc(100vh - 84px);padding-bottom:84px}
+    .header-left{display:flex;flex-direction:column;gap:8px}
+    .user-name{font-size:20px;font-weight:700}
+    .name-frame{
+      width:100%;
+      max-width:720px;
+      height:12.5vh;
+      min-height:72px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.04);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      margin-top:6px;
+      box-shadow:0 10px 30px rgba(2,6,23,0.6);
+      padding:12px;
+      gap:8px;
+      box-sizing:border-box;
+    }
+    .name-initials{font-size:22px;font-weight:800;color:var(--text)}
+    .stats-row{display:flex;gap:12px;align-items:center;justify-content:center;width:100%}
+    .stat-pill{padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.03);min-width:90px;text-align:center}
+    .stat-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px}
+    .stat-value{font-weight:800;font-size:20px;margin-top:4px}
+    .page-title{margin-top:18px;font-size:18px;font-weight:700;color:var(--muted)}
+    .pages{position:relative;margin-top:18px;min-height:18vh}
+    .page{position:absolute;inset:0;transition:opacity .28s, transform .28s;opacity:0;transform:translateY(8px);pointer-events:none}
+    .page.active{opacity:1;transform:translateY(0);pointer-events:auto}
+    .bottom-nav{position:fixed;left:12px;right:12px;bottom:12px;height:64px;background:linear-gradient(180deg,rgba(10,14,22,0.85),rgba(5,8,14,0.9));border-radius:18px;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;gap:6px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 10px 30px rgba(2,6,23,0.6);z-index:50}
+    .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font-size:12px;cursor:pointer;user-select:none}
+    .nav-item img{width:22px;height:22px;filter:invert(1) brightness(2)}
+    .nav-item.active{color:var(--accent);transform:translateY(-4px)}
+    .center-block{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:18px}
+    .task-list{display:flex;flex-direction:column;gap:12px}
+    .task-item{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,0.03);display:flex;justify-content:space-between;gap:12px;align-items:center;transition:opacity .25s, transform .18s}
+    .task-meta{display:flex;flex-direction:column;gap:6px;max-width:66%}
+    .task-title{font-weight:800;font-size:15px;word-break:break-word}
+    .task-sub{color:var(--muted);font-size:13px}
+    .btn-small{padding:8px 10px;border-radius:10px;font-weight:700;font-size:13px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);cursor:pointer}
+    .btn-small.primary{background:linear-gradient(90deg,var(--accent),#3b82f6);color:white;border:none}
+    .leaderboard{width:100%;max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+    .leader-row{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.03);align-items:center}
+    .leader-rank{font-weight:800;width:36px;text-align:center}
+    .leader-name{flex:1;padding-left:8px;font-weight:700}
+    .leader-stats{min-width:140px;text-align:right}
+    .small-muted{color:var(--muted);font-size:13px}
+
+    /* --- SAFE full-bleed: НЕ використовуємо 100vw, а даємо padding замість негативних margin --- */
+    .full-bleed {
+      width: 100%;
+      box-sizing: border-box;
+      padding-left: 16px;   /* гарантований відступ від лівого краю WebApp */
+      padding-right: 16px;  /* і від правого */
+      padding-top: 12px;
+      padding-bottom: 12px;
+      background: transparent;
+      overflow: visible;
+    }
+
+    /* game button & image: адаптивна ширина, ніколи не вилазить */
+    .game-button {
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap:6px;
+      margin:0;
+      box-sizing:border-box;
+    }
+    .game-button img {
+      display:block;
+      width: clamp(80px, 25vw, 220px); /* адаптив: мін 80px, бажано 25vw, максимум 220px */
+      max-width: 100%;                 /* не вийде за межі батьківського контейнера */
+      height:auto;
+      border-radius:12px;
+      padding:8px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.4);
+      background:rgba(255,255,255,0.01);
+      border:1px solid rgba(255,255,255,0.04);
+      margin:0;
+      box-sizing:border-box;
+    }
+
+    /* coin styles & animation (page-coin) */
+    #coinStage{height:180px;display:flex;align-items:center;justify-content:center;margin-top:12px}
+    #coin{width:110px;height:110px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;color:#1b1f23;box-shadow:0 8px 30px rgba(0,0,0,0.5);background:linear-gradient(180deg,#f6d37a,#d89b2b);transform-origin:50% 50%;backface-visibility:hidden}
+    @keyframes coinFlip{0%{transform:perspective(800px) rotateX(0) translateY(0)}30%{transform:perspective(800px) rotateX(720deg) translateY(-120px)}100%{transform:perspective(800px) rotateX(1440deg) translateY(0)}}
+    .coin-flipping{animation:coinFlip 1.6s cubic-bezier(.2,.9,.2,1)}
+
+    /* bet input + radio styles */
+    .bet-row{display:flex;gap:10px;align-items:center;margin-top:10px}
+    .bet-input{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:var(--text);font-weight:700}
+
+    .choice-row{display:flex;gap:12px;margin-top:10px}
+    .choice{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:transparent;cursor:pointer}
+    .choice input{display:none}
+    .choice .label{font-weight:800;color:var(--text);padding:6px 10px;border-radius:8px}
+    .choice input:checked + .label{background:var(--accent);color:white}
+
+    /* responsive adjustments */
+    @media (max-width:420px){
+      .game-button img{width: clamp(80px, 34vw, 180px);}
+      .name-frame{height:110px}
+      .container{padding:12px}
+      .full-bleed{padding-left:12px;padding-right:12px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container main-area">
+    <header>
+      <div class="header-left">
+        <div class="user-name" id="userName">Ваш баланс</div>
+        <div class="name-frame">
+          <div class="name-initials" id="initials">VB</div>
+          <div class="stats-row">
+            <div class="stat-pill">
+              <div class="stat-label">mDrops</div>
+              <div class="stat-value" id="mdropsVal">0</div>
+            </div>
+            <div class="stat-pill">
+              <div class="stat-label">GGs</div>
+              <div class="stat-value" id="ggsVal">1</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- under balance: Games text + image-button full-bleed with safe inset -->
+        <div class="full-bleed" aria-hidden="false">
+          <div style="font-weight:800;color:var(--muted);margin-bottom:8px;">Игры</div>
+          <div class="game-button" id="mainGameButton">
+            <img src="{{ url_for('static', filename='images/games/coin.png') }}" alt="Coin game" id="mainGameImg">
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <div class="page-title" id="pageTitle">Главная</div>
+
+    <div class="pages">
+      <div class="page active" id="page-home">
+        <div class="card"><div class="center-block">Главная страница</div></div>
+      </div>
+
+      <div class="page" id="page-tasks">
+        <div class="card">
+          <div style="font-weight:800;margin-bottom:12px;">Доступные задачи</div>
+          <div id="tasksContainer" class="task-list"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-games">
+        <div class="card">
+          <div style="font-weight:800;margin-bottom:12px;">Игры</div>
+
+          <!-- games list area full-bleed -->
+          <div class="full-bleed">
+            <div class="game-button" id="gamesListButton">
+              <img src="{{ url_for('static', filename='images/games/coin.png') }}" alt="Coin game" id="gamesListImg">
+            </div>
+            <div class="small-muted" style="margin-top:8px;">Нажмите на иконку, чтобы перейти к игре.</div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- actual coin game lives here (page-coin) -->
+      <div class="page" id="page-coin">
+        <div class="card">
+          <div style="font-weight:800;margin-bottom:12px;">Игра: Монетка</div>
+
+          <!-- Bet form -->
+          <div style="max-width:480px;margin:12px auto;padding:12px;border-radius:10px;background:rgba(255,255,255,0.01)">
+            <div style="font-weight:700;margin-bottom:8px;">Сделайте ставку</div>
+
+            <div class="bet-row">
+              <input id="coinBet" class="bet-input" type="number" min="1" placeholder="Ставка (mDrops)">
+            </div>
+
+            <div class="choice-row" role="radiogroup" aria-label="Выбор Орел или Решка">
+              <label class="choice">
+                <input type="radio" name="coinChoice" value="heads" checked>
+                <span class="label">Орёл</span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="coinChoice" value="tails">
+                <span class="label">Решка</span>
+              </label>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:12px;align-items:center">
+              <button id="coinFlipBtn" class="btn-small primary">Подбросить!</button>
+              <div id="coinStatus" style="flex:1;color:var(--muted);font-size:14px;"></div>
+            </div>
+
+            <div id="coinStage">
+              <div id="coin"><span id="coinFace">?</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="page" id="page-top">
+        <div class="card">
+          <div style="font-weight:800;margin-bottom:12px;">Топ по mDrops (топ-50)</div>
+          <div id="topContainer" class="leaderboard"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-ref">
+        <div class="card">
+          <div style="font-weight:800;">Рефералы</div>
+          <div class="small-muted">Количество рефералов: <span id="referralsCount">0</span></div>
+          <div class="small-muted">Реферальная ссылка:</div>
+          <div><a id="refLink" class="ref-link" href="#" target="_blank" style="color:var(--accent)">https://t.me/gmegadbot?start=</a></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" data-target="page-home"><img src="{{ url_for('static', filename='images/house.svg') }}"><div class="label">Дом</div></div>
+    <div class="nav-item" data-target="page-tasks"><img src="{{ url_for('static', filename='images/list.svg') }}"><div class="label">Задания</div></div>
+    <div class="nav-item" data-target="page-games"><img src="{{ url_for('static', filename='images/joystick.svg') }}"><div class="label">Игры</div></div>
+    <div class="nav-item" data-target="page-top"><img src="{{ url_for('static', filename='images/rating.svg') }}"><div class="label">Топ</div></div>
+    <div class="nav-item" data-target="page-ref"><img src="{{ url_for('static', filename='images/people.svg') }}"><div class="label">Рефералы</div></div>
+  </nav>
+
+  <script>
+    // helpers
+    function qs(s){return document.querySelector(s)}
+    function qsa(s){return Array.from(document.querySelectorAll(s))}
+
+    function sanitize(v){
+      if (v === null || v === undefined) return '';
+      return String(v).replace(/\uFFFD/g,'').replace(/[\x00-\x1F\x7F-\x9F]/g,'').replace(/\s+/g,' ').trim();
+    }
+    function truncateVisible(str, maxLen){
+      if(!str) return '';
+      const chars = Array.from(str);
+      if(chars.length <= maxLen) return chars.join('');
+      const keep = Math.max(0, maxLen - 3);
+      return chars.slice(0, keep).join('') + '...';
+    }
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m])); }
+
+    // elements
+    const mdropsEl = qs('#mdropsVal'), ggsEl = qs('#ggsVal'), userNameEl = qs('#userName'), initialsEl = qs('#initials'),
+          referralsCountEl = qs('#referralsCount'), refLinkEl = qs('#refLink'), topContainer = qs('#topContainer'),
+          tasksContainer = qs('#tasksContainer');
+
+    window.CURRENT_USER_ID = null;
+
+    function setUser(name, id){
+      const clean = sanitize(name);
+      const base = clean && clean.length ? clean : 'Ваш баланс';
+      const display = truncateVisible(base, 15);
+      userNameEl.innerText = display;
+      const source = clean && clean.length ? clean : display;
+      const words = source.split(/\s+/).filter(Boolean);
+      let initials = '';
+      if(words.length >= 2) initials = (Array.from(words[0])[0] || '') + (Array.from(words[1])[0] || '');
+      else { const arr = Array.from(source); initials = (arr[0] || '') + (arr[1] || ''); }
+      initialsEl.innerText = sanitize(initials).toUpperCase().slice(0,2) || 'VB';
+      if(id){ window.CURRENT_USER_ID = id; loadBalanceFor(id); }
+    }
+
+    async function loadBalanceFor(id){
+      if(!id) return;
+      window.CURRENT_USER_ID = id;
+      try{
+        const res = await fetch(`/api/balance/${id}`);
+        if(!res.ok){ mdropsEl.innerText='0'; ggsEl.innerText='1'; return; }
+        const data = await res.json();
+        mdropsEl.innerText = sanitize(String(data.mDrops || 0));
+        ggsEl.innerText = sanitize(String(data.GGs || 0));
+        referralsCountEl.innerText = data.referrals || 0;
+        refLinkEl.href = `https://t.me/gmegadbot?start=${id}`;
+        refLinkEl.innerText = `https://t.me/gmegadbot?start=${id}`;
+      }catch(e){ console.error(e); mdropsEl.innerText='0'; ggsEl.innerText='1'; }
+    }
+
+    // navigation
+    (function(){
+      const pages = qsa('.page'), nav = qsa('.nav-item'), title = qs('#pageTitle');
+      function activate(id){
+        pages.forEach(p=>p.classList.remove('active')); nav.forEach(n=>n.classList.remove('active'));
+        qs('#'+id)?.classList.add('active'); qs(`.nav-item[data-target="${id}"]`)?.classList.add('active');
+        title.innerText = { 'page-home':'Главная','page-tasks':'Задания','page-games':'Игры','page-coin':'Монетка','page-top':'Топ','page-ref':'Рефералы' }[id]||'';
+        if(id === 'page-top') loadTop();
+      }
+      nav.forEach(n=>n.addEventListener('click', ()=> activate(n.dataset.target)));
+      window.activatePage = activate;
+      activate('page-home');
+    })();
+
+    // image buttons -> navigate to page-coin
+    qs('#mainGameImg')?.addEventListener('click', ()=> window.activatePage('page-coin'));
+    qs('#gamesListImg')?.addEventListener('click', ()=> window.activatePage('page-coin'));
+
+    // load tasks
+    async function loadTasks(){
+      try{
+        const res = await fetch('/api/tasks');
+        if(!res.ok) return;
+        const tasks = await res.json();
+        tasksContainer.innerHTML = '';
+        tasks.forEach(t=>{
+          const reward_m = t.reward_mdrops ?? 0;
+          const reward_g = t.reward_ggs ?? 1;
+          const channel_id = t.channel_id || t.channel || t.chat_id || t.username || null;
+          const url = t.url || (t.username ? `https://t.me/${t.username.replace(/^@/,'')}` : (channel_id ? `https://t.me/${channel_id}` : '#'));
+          const created_at = t.created_at || '';
+          const item = document.createElement('div'); item.className='task-item';
+          item.innerHTML = `<div class="task-meta"><div class="task-title">${escapeHtml(t.title||t.name||'Задача')}</div><div class="task-sub">${escapeHtml(String(reward_m))} mDrops, ${escapeHtml(String(reward_g))} GGs</div></div><div class="task-actions"><button class="btn-small primary">Выполнить</button></div>`;
+          const btn = item.querySelector('button');
+          const taskKey = `${channel_id}:${created_at}`;
+          if(localStorage.getItem('completed_'+taskKey)){ btn.innerText='Завершено'; btn.disabled=true; }
+          btn.dataset.channelId = channel_id; btn.dataset.url = url; btn.dataset.createdAt = created_at;
+          btn.onclick = async ()=>{
+            if(!window.CURRENT_USER_ID){ alert('Откройте WebApp через бота, чтобы мы знали ваш user_id.'); return; }
+            if(localStorage.getItem('completed_'+taskKey)){ alert('Задача уже выполнена!'); return; }
+            const tg = window.Telegram?.WebApp;
+            try{ if(tg && typeof tg.openTelegramLink === 'function') tg.openTelegramLink(btn.dataset.url); else if(tg && typeof tg.openLink === 'function') tg.openLink(btn.dataset.url); else window.open(btn.dataset.url,'_blank'); }catch(e){ window.open(btn.dataset.url,'_blank'); }
+            btn.disabled=true; const prevText = btn.innerText; btn.innerText='Проверка...';
+            await new Promise(r=>setTimeout(r,5000));
+            try{
+              const checkRes = await fetch('/api/check_sub',{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({user_id: window.CURRENT_USER_ID, channel_id: btn.dataset.channelId})});
+              const checkJson = await checkRes.json();
+              if(checkJson.subscribed){
+                const completeRes = await fetch('/api/task_complete',{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({user_id: window.CURRENT_USER_ID, channel_id: btn.dataset.channelId, created_at: btn.dataset.createdAt})});
+                const completeJson = await completeRes.json();
+                if(completeJson.ok){ localStorage.setItem('completed_'+taskKey,'1'); btn.innerText='Завершено'; btn.disabled=true; await loadBalanceFor(window.CURRENT_USER_ID); alert('Выполнено! Награда: ' + (completeJson.reward || 1) + ' GGs'); }
+                else { btn.innerText=prevText; btn.disabled=false; alert('Ошибка: ' + (completeJson.msg||completeJson.error||'не удалось')); }
+              } else { btn.innerText=prevText; btn.disabled=false; alert('Похоже, вы ещё не подписаны на канал.'); }
+            }catch(e){ console.error(e); btn.innerText=prevText; btn.disabled=false; alert('Ошибка при проверке.'); }
+          };
+          tasksContainer.appendChild(item);
+        });
+      }catch(e){ console.error('loadTasks', e); }
+    }
+
+    // load top
+    async function loadTop(){
+      try{
+        topContainer.innerHTML = '<div class="small-muted">Загрузка...</div>';
+        const res = await fetch('/api/top?limit=50');
+        if(!res.ok){ topContainer.innerHTML = '<div class="small-muted">Не удалось загрузить топ.</div>'; return; }
+        const list = await res.json();
+        if(!Array.isArray(list) || list.length === 0){ topContainer.innerHTML = '<div class="small-muted">Нет данных для отображения.</div>'; return; }
+        topContainer.innerHTML = '';
+        list.forEach((u, idx)=>{
+          const row = document.createElement('div'); row.className='leader-row';
+          const name = u.display_name && String(u.display_name).trim().length ? escapeHtml(truncateVisible(String(u.display_name),30)) : ('#' + (u.user_id||'').slice(-6));
+          const m = escapeHtml(String(u.mDrops || u.mdrops || '0'));
+          const g = escapeHtml(String(u.GGs !== undefined ? u.GGs : 0));
+          row.innerHTML = `<div class="leader-rank">${idx+1}</div><div class="leader-name">${name}</div><div class="leader-stats">${m} • ${g} GGs</div>`;
+          topContainer.appendChild(row);
+        });
+      }catch(e){ console.error('loadTop', e); topContainer.innerHTML = '<div class="small-muted">Ошибка при загрузке топа.</div>'; }
+    }
+
+    // --- Coin flip logic (page-coin) ---
+    const coinFlipBtn = qs('#coinFlipBtn'), coinBetEl = qs('#coinBet'), coinStatusEl = qs('#coinStatus'), coinEl = qs('#coin'), coinFaceEl = qs('#coinFace');
+
+    function getSelectedChoice(){
+      const el = document.querySelector('input[name="coinChoice"]:checked');
+      return el ? el.value : 'heads';
+    }
+
+    coinFlipBtn?.addEventListener('click', async function(){
+      const btn = this;
+      const amount = parseFloat(coinBetEl.value);
+      const choice = getSelectedChoice();
+      if(!window.CURRENT_USER_ID){ alert('Откройте WebApp через бота, чтобы мы знали ваш user_id.'); return; }
+      if(!amount || amount <= 0){ alert('Введите корректную ставку.'); return; }
+      btn.disabled = true;
+      coinStatusEl.innerText = 'Подбрасываем...';
+      coinEl.classList.remove('coin-flipping'); void coinEl.offsetWidth; coinEl.classList.add('coin-flipping'); coinFaceEl.innerText = '...';
+
+      try{
+        const res = await fetch('/api/flip',{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({ user_id: window.CURRENT_USER_ID, amount: amount, choice: choice })});
+        const j = await res.json();
+        await new Promise(r=>setTimeout(r,1600));
+        if(!j.ok){ coinStatusEl.innerText = 'Ошибка: ' + (j.error || j.msg || 'неизвестно'); await loadBalanceFor(window.CURRENT_USER_ID); btn.disabled=false; return; }
+        const outcome = j.outcome; const win = !!j.win;
+        coinFaceEl.innerText = (outcome === 'heads') ? 'О' : 'Р';
+        if(j.mDrops !== undefined) mdropsEl.innerText = sanitize(String(j.mDrops));
+        else await loadBalanceFor(window.CURRENT_USER_ID);
+        try { const b = await fetch(`/api/balance/${window.CURRENT_USER_ID}`).then(r=>r.json()); if(b && b.GGs !== undefined) ggsEl.innerText = sanitize(String(b.GGs)); } catch(e){}
+        if(win) coinStatusEl.innerText = `Вы выиграли! +${(j.payout !== undefined ? j.payout : amount)} (баланс ${j.mDrops || ''})`;
+        else coinStatusEl.innerText = `Вы проиграли. (баланс ${j.mDrops || ''})`;
+      }catch(e){ console.error(e); coinStatusEl.innerText = 'Ошибка сети'; }
+      finally{ btn.disabled = false; }
+    });
+
+    // init: telegram or query param fallback
+    (function init(){
+      try{
+        const tg = window.Telegram?.WebApp;
+        if(tg){ tg.expand?.(); const u = tg.initDataUnsafe?.user; if(u && u.id){ const full = `${u.first_name||''} ${u.last_name||''}`.trim(); setUser(full, u.id); } else { const uid = new URLSearchParams(location.search).get('user_id'); setUser('Ваш баланс', uid); } }
+        else { const uid = new URLSearchParams(location.search).get('user_id'); setUser('Ваш баланс', uid); }
+      }catch(e){ console.warn('init error', e); const uid = new URLSearchParams(location.search).get('user_id'); setUser('Ваш баланс', uid); }
+      loadTasks();
+    })();
+  </script>
+</body>
+</html>
