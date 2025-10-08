@@ -3,3 +3,4 @@ pysqlite3
 flask
 pyngrok
 tzdata
+requests
