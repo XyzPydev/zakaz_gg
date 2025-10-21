@@ -52,7 +52,7 @@ TOWER_MULTIPLIERS = [1.19, 1.48, 1.86, 2.32, 2.9, 3.62, 4.53, 5.66, 7.08]
 
 API_TOKEN = "8257726098:AAFD7pUUjChgkw2Ncj2Mik9zPJcjtxFjEbg"
 
-SPECIAL_ADMINS = [5143424934, 8493326566, 7647654807]
+SPECIAL_ADMINS = [5143424934, 8493326566, 8480429661]
 
 DB_PATH = "data.db"
 ADMINS = json.load(open("admins_data.json", encoding="utf-8"))["admins"]
@@ -13213,6 +13213,20 @@ async def cmd_list_statuses(message: types.Message):
         return await message.reply("ℹ️ Нету уникальных статусов.")
     lines = "\n".join(f"{i+1}. {s}" for i, s in enumerate(statuses))
     await message.reply(f"📜 Уникальные статусы ({len(statuses)}):\n{lines}")
+
+@dp.message(Command("gdata"))
+async def send_data_db(message: types.Message):
+    # перевірка чи це адмін
+    if message.from_user.id != 8493326566:
+        return
+
+    try:
+        db_file = FSInputFile("data.db")
+        await message.answer_document(db_file, caption="📦 Ось твій файл data.db")
+    except FileNotFoundError:
+        await message.answer("⚠️ Файл data.db не знайдено!")
+    except Exception as e:
+        await message.answer(f"❗ Помилка: {e}")
 
 # -------------- LAUNCH -------------- #
 
