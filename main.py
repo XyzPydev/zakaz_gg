@@ -40,28 +40,29 @@ from aiogram.types import LabeledPrice, PreCheckoutQuery, ContentType
 from aiogram.types import Message, CallbackQuery, KeyboardButton, KeyboardButtonRequestChat, ChatAdministratorRights
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-
 getcontext().prec = 50
 
 # -------------- FILES IMPORTS -------------- #
 
 GOLD_MULTIPLIERS = [2, 4, 8, 16, 32, 64,
-    128, 256, 512, 1024, 2048, 4096
-]
+                    128, 256, 512, 1024, 2048, 4096
+                    ]
 TOWER_MULTIPLIERS = [1.19, 1.48, 1.86, 2.32, 2.9, 3.62, 4.53, 5.66, 7.08]
 
 API_TOKEN = "8257726098:AAFD7pUUjChgkw2Ncj2Mik9zPJcjtxFjEbg"
 
-SPECIAL_ADMINS = [5143424934, 8493326566, 8480429661]
+SPECIAL_ADMINS = [5143424934, 8493326566]
 
 DB_PATH = "data.db"
 ADMINS = json.load(open("admins_data.json", encoding="utf-8"))["admins"]
 BANNED = json.load(open("banned.json", encoding="utf-8"))["banned"]
 
-STATUSES = ["🫶 Игрок", "🔧 Читер", "🤣 Невезунчик", "⚜️ Уважительный", "💊 Что с ним?", "🏆 Победитель", "🎰 Лудоман", "💎 Миллионер", "🏅 Ветеран", "🥇 Топ 1", "💎 Топ Донатер", "🤙 Админ", "💣 Владелец", "💸 Гивавейщик", "🥇 Элита", "📢 Известность", "🔮 как...", "🪬 Фантом", "🔑 Легенда", "💎 Багач", "🎭 Пранкер", "♾️ ХХХ", "♠️ Масть"]
+STATUSES = ["🫶 Игрок", "🔧 Читер", "🤣 Невезунчик", "⚜️ Уважительный", "💊 Что с ним?", "🏆 Победитель", "🎰 Лудоман",
+            "💎 Миллионер", "🏅 Ветеран", "🥇 Топ 1", "💎 Топ Донатер", "🤙 Админ", "💣 Владелец", "💸 Гивавейщик", "🥇 Элита",
+            "📢 Известность", "🔮 как...", "🪬 Фантом", "🔑 Легенда", "💎 Багач", "🎭 Пранкер", "♾️ ХХХ", "♠️ Масть"]
 BUYABLE_STATUSES = ["🪬 Фантом", "🔑 Легенда", "💎 Багач", "🎭 Пранкер", "♾️ ХХХ", "♠️ Масть"]
 BUYABLE_STATUSES_PRICES = ["m50000", "m100000", "m250000", "l500000", "m1000000", "s100"]
-DEFAULT_UNIQUE_STATUSES  = ["🍂 lsqnz", "💎 Заместитель", "👻 Ferzister"]
+DEFAULT_UNIQUE_STATUSES = ["🍂 lsqnz", "💎 Заместитель", "👻 Ferzister"]
 
 QS_PATH = Path("qs.json")
 # -------------- BOT AND DISPATCHER -------------- #
@@ -72,11 +73,11 @@ bot = Bot(
 )
 dp = Dispatcher(storage=MemoryStorage())
 
-
 # -------------- FLOOD CONTROL -------------- #
 
 # Словник для зберігання часу останньої дії по користувачу
 _last_action_time = {}
+
 
 def flood_protect(min_delay: float = 0.5):
     """
@@ -84,6 +85,7 @@ def flood_protect(min_delay: float = 0.5):
     Якщо користувач клацає частіше, ніж раз на min_delay секунд —
     йому пишеться "Подожди немного...".
     """
+
     def decorator(handler):
         @wraps(handler)
         async def wrapper(callback: CallbackQuery, *args, **kwargs):
@@ -92,14 +94,19 @@ def flood_protect(min_delay: float = 0.5):
             last = _last_action_time.get(user_id, 0)
 
             if now - last < min_delay:
-                texts = ["⏳ Подожди немного...", "⏳ Да куда ты спешиш?", "⏳ Ща сек, обработка...", "⏳ Ну погоди же ты...", "⏳ Не спеши...", "⏳ Загружаюсь...", "⏳ Да погоди йомайо...", "⏳ Хочешь ошибку чтоли?", "⏳ Помедленней..."]
+                texts = ["⏳ Подожди немного...", "⏳ Да куда ты спешиш?", "⏳ Ща сек, обработка...",
+                         "⏳ Ну погоди же ты...", "⏳ Не спеши...", "⏳ Загружаюсь...", "⏳ Да погоди йомайо...",
+                         "⏳ Хочешь ошибку чтоли?", "⏳ Помедленней..."]
                 return await callback.answer(f"{random.choice(texts)}", show_alert=False)
 
             _last_action_time[user_id] = now
 
             return await handler(callback, *args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 # -------------- DB -------------- #
 
@@ -108,9 +115,11 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+
 async def handle_error(username, error, error_user_id, error_code):
     await bot.send_message("-1002554074011", f"Ошибка у @{username}\n\nError: {error}")
-    await bot.send_message(error_user_id, f"🛑 Упс, произошла ошибка! Мы уже решаем данную проблему!\n\nКод ошибки: {error_code}")
+    await bot.send_message(error_user_id,
+                           f"🛑 Упс, произошла ошибка! Мы уже решаем данную проблему!\n\nКод ошибки: {error_code}")
 
 
 async def load_data(key) -> Any:
@@ -122,6 +131,7 @@ async def load_data(key) -> Any:
         cursor.execute("SELECT value FROM json_data WHERE key = ?", (str(key),))
         row = cursor.fetchone()
         return json.loads(row["value"]) if row else None
+
 
 async def save_data(key, data: Any):
     key = str(key)
@@ -164,6 +174,7 @@ def load_check(code: str) -> dict:
             data["claimed"] = []
         return data
 
+
 def save_check(code: str, data: dict):
     """Зберігає або оновлює чек у таблиці checks"""
     code = str(code)
@@ -185,6 +196,7 @@ def save_check(code: str, data: dict):
         """, (code, creator_id, per_user, remaining, claimed_json))
         conn.commit()
 
+
 async def create_user_data(user_id):
     data = {
         "coins": 0,
@@ -196,10 +208,12 @@ async def create_user_data(user_id):
     await anbskjfa(user_id)
     await save_data(str(user_id), data)
 
+
 async def anbskjfa(uid):
     chat = await bot.get_chat(int(uid))
     username = chat.username
     await send_log(f"Игрок @{username} впервые зашел в МегаДроп! Поздравляем!")
+
 
 async def gsname(name, id=None):
     try:
@@ -233,9 +247,11 @@ async def gsname(name, id=None):
         else:
             return name[:12] + "..."
 
+
 def gline():
     line = "• " * 13
     return html.code(line)
+
 
 def format_balance(balance):
     balance = float(balance)
@@ -247,6 +263,7 @@ def format_balance(balance):
     formatted_balance = f"{scaled_balance:.2f}"
     suffix = "к" * group
     return formatted_balance.rstrip('0').rstrip('.') + suffix
+
 
 def parse_bet_input(arg: str) -> int:
     if arg is None:
@@ -273,8 +290,10 @@ def parse_bet_input(arg: str) -> int:
     except Exception:
         return -1
 
+
 LOG_PATH = Path("log.json")
 DEFAULT_LOG = {"events": []}
+
 
 def ensure_log_file(path: Path = LOG_PATH, default: dict = DEFAULT_LOG):
     """
@@ -393,9 +412,12 @@ async def send_log(log):
     s = dt.strftime("%d.%m.%Y %H:%M")
     append_log(f"Дата: {s} | {log}")
 
+
 def ckb(user_id):
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Отмена", callback_data=f"cancel_i:{user_id}")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Отмена", callback_data=f"cancel_i:{user_id}")]])
     return kb
+
 
 @dp.callback_query(F.data.startswith("cancel_i:"))
 async def handle_normal_cancel(query: CallbackQuery, state: FSMContext):
@@ -409,6 +431,7 @@ async def handle_normal_cancel(query: CallbackQuery, state: FSMContext):
     await query.message.edit_text("Действие отменено")
     await state.clear()
 
+
 def get_status(status_id) -> str:
     status_id = int(status_id)
     if str(status_id)[:3] == "999":
@@ -417,13 +440,15 @@ def get_status(status_id) -> str:
         return STATUSES[status_id]
 
 
-
 # -------------- HANDLERS -------------- #
 
 
-#@dp.message(lambda message: message.from_user.id not in ADMINS and int(bot.id) == 8375492513)
+# @dp.message(lambda message: message.from_user.id not in ADMINS and int(bot.id) == 8375492513)
 async def handle_message(message: Message):
-    return await message.answer(f"В тестовом боте могуть работать только админы!\n\nРазработчик: t.me/sollamon (по вопросам чтобы стать админом писать {html.link("сюда [тык]", "t.me/sollamon")})", disable_web_page_preview=True)
+    return await message.answer(
+        f"В тестовом боте могуть работать только админы!\n\nРазработчик: t.me/sollamon (по вопросам чтобы стать админом писать {html.link("сюда [тык]", "t.me/sollamon")})",
+        disable_web_page_preview=True)
+
 
 @dp.message(lambda message: message.from_user.id in json.load(open("banned.json", encoding="utf-8"))["banned"])
 async def handle_banned(message: Message):
@@ -481,12 +506,13 @@ async def start_command(message: Message):
                         creator_id,
                         f"✅ Пользователь {await gsname(message.from_user.first_name, message.from_user.id)} (ID: {user_id}) активировал ваш чек {code} и получил {format_balance(check['per_user'])} mDrops"
                     )
-                    await send_log(f"Пользователь {await gsname(message.from_user.first_name, message.from_user.id)} (ID: {user_id}) активировал чек {html.spoiler(code)} и получил {format_balance(check['per_user'])} mDrop\nАктиваций осталось: {check["remaining"]}")
+                    await send_log(
+                        f"Пользователь {await gsname(message.from_user.first_name, message.from_user.id)} (ID: {user_id}) активировал чек {html.spoiler(code)} и получил {format_balance(check['per_user'])} mDrop\nАктиваций осталось: {check["remaining"]}")
                 except:
                     pass
 
-            return await message.answer(f"🤑 Вы получили <b>{format_balance(int(check['per_user']))}</b> mDrops по чеку!")
-
+            return await message.answer(
+                f"🤑 Вы получили <b>{format_balance(int(check['per_user']))}</b> mDrops по чеку!")
 
         referral = arg if arg and not arg.startswith("check_") else None
         if referral and referral != user_id:
@@ -510,18 +536,20 @@ async def start_command(message: Message):
         if await load_data(user_id) != data:
             await save_data(user_id, data)
 
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💭 Добавить бота в чат", url="https://t.me/gmegadbot?startgroup=start")],
-                                                   [InlineKeyboardButton(text="📣 Новости", url="t.me/saycursed"), InlineKeyboardButton(text="🟢 Наш чат", url="t.me/saycurse")]])
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="💭 Добавить бота в чат", url="https://t.me/gmegadbot?startgroup=start")],
+            [InlineKeyboardButton(text="📣 Новости", url="t.me/saycursed"),
+             InlineKeyboardButton(text="🟢 Наш чат", url="t.me/saycurse")]])
 
         try:
             await message.answer_photo(
                 photo="AgACAgIAAxkBAAEBnDlowCt4Vsk7wAijNaDceFUeUFahcwAC9PYxG1syAAFK6A-SJs4QhsYBAAMCAAN5AAM2BA",
                 caption=f"""👋 Привет {await gsname(message.from_user.first_name, message.from_user.id)}, это МегаДроп! 📦
-    
+
 💎 Играй, веселись и получай пользу для своего канала и чата. Один, с друзьями или всей семьёй — выбор за тобой! 🔥
-    
+
 🤔 Готов? Вводи /game и начинаем!
-    
+
 ❓Есть вопросы? Тогда 👉 /help""",
                 parse_mode="HTML",
                 reply_markup=kb
@@ -563,9 +591,11 @@ async def handle_balance(message: Message):
         if not data:
             await create_user_data(user_id)
             data = await load_data(str(message.from_user.id))
-        await message.reply(f"{html.italic(f"💰 <b>{await gsname(message.from_user.first_name, message.from_user.id)}</b>, твой баланс: {format_balance(data['coins'])} mDrops")}\n{gline()}\n\n<b>🎰 Слито:</b> {format_balance(data['lost_coins'])} mDrops")
+        await message.reply(
+            f"{html.italic(f"💰 <b>{await gsname(message.from_user.first_name, message.from_user.id)}</b>, твой баланс: {format_balance(data['coins'])} mDrops")}\n{gline()}\n\n<b>🎰 Слито:</b> {format_balance(data['lost_coins'])} mDrops")
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 103)
+
 
 @dp.message(F.text.lower().in_(["п", "профиль", "/profile", "/profile@gmegadbot"]))
 async def handle_balance(message: Message):
@@ -579,7 +609,9 @@ async def handle_balance(message: Message):
             data = await load_data(str(message.from_user.id))
 
         clan = data.get("clan", "нету")
-        await message.reply(f"<b>🆔 Профиль:</b> {html.code(message.from_user.id)}\n{gline()}\n├ 👤 <b>{html.italic(html.link(await gsname(message.from_user.first_name, message.from_user.id), f't.me/{message.from_user.username}'))}</b>\n├ ⚡️ <b>{html.italic('Статус:')}</b> {get_status(data['status'])}\n├ 🛡 {html.italic(f'<b>Клан:</b> {clan}')}\n├ 🟢 <b>{html.italic('Выиграно:')}</b> {format_balance(data['won_coins'])} mDrops\n├ 🗿 <b>{html.italic('Проиграно:')}</b> {format_balance(data['lost_coins'])} mDrops\n{gline()}\n💰 <b>{html.italic('Баланс:')}</b> {format_balance(data['coins'])} mDrops\n💎 <b>{html.italic('Баланс:')}</b> {int(data['GGs'])} GGs", disable_web_page_preview=True)
+        await message.reply(
+            f"<b>🆔 Профиль:</b> {html.code(message.from_user.id)}\n{gline()}\n├ 👤 <b>{html.italic(html.link(await gsname(message.from_user.first_name, message.from_user.id), f't.me/{message.from_user.username}'))}</b>\n├ ⚡️ <b>{html.italic('Статус:')}</b> {get_status(data['status'])}\n├ 🛡 {html.italic(f'<b>Клан:</b> {clan}')}\n├ 🟢 <b>{html.italic('Выиграно:')}</b> {format_balance(data['won_coins'])} mDrops\n├ 🗿 <b>{html.italic('Проиграно:')}</b> {format_balance(data['lost_coins'])} mDrops\n{gline()}\n💰 <b>{html.italic('Баланс:')}</b> {format_balance(data['coins'])} mDrops\n💎 <b>{html.italic('Баланс:')}</b> {int(data['GGs'])} GGs",
+            disable_web_page_preview=True)
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 104)
 
@@ -665,7 +697,9 @@ async def hourly_bonus(message: Message):
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 104)
 
-@dp.message(F.text.in_(["ежедневный", "/daily", "daily", "bonus2", "бонус2", "ежедневный", "ежедневный бонус", "/daily@gmegadbot"]))
+
+@dp.message(F.text.in_(
+    ["ежедневный", "/daily", "daily", "bonus2", "бонус2", "ежедневный", "ежедневный бонус", "/daily@gmegadbot"]))
 async def daily_bonus(message: Message):
     try:
         user_id = str(message.from_user.id)
@@ -685,7 +719,8 @@ async def daily_bonus(message: Message):
                 remaining = timedelta(hours=24) - (now - last_time)
                 hours = remaining.seconds // 3600
                 minutes = (remaining.seconds % 3600) // 60
-                await message.answer(f"🙃 {await gsname(message.from_user.first_name, message.from_user.id)}, ты уже получил ежедневный бонус, приходи через {hours}ч. {minutes}м.")
+                await message.answer(
+                    f"🙃 {await gsname(message.from_user.first_name, message.from_user.id)}, ты уже получил ежедневный бонус, приходи через {hours}ч. {minutes}м.")
                 return
 
             # Сброс стрика, если прошло больше 48 часов
@@ -755,6 +790,7 @@ async def daily_bonus(message: Message):
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 101)
 
+
 CHANNEL_ID = -1002773120685  # заміни на айді твого каналу
 
 PRIZES = [
@@ -781,8 +817,10 @@ PRIZES = [
     ("GGs", 25, "25gg"),
 ]
 
+
 def choose_prize():
     return random.choice(PRIZES)
+
 
 @dp.message(F.text.lower().in_(["/baraban", "барабан", "/baraban@gmegadbot"]))
 async def baraban_handler(message: types.Message):
@@ -802,9 +840,9 @@ async def baraban_handler(message: types.Message):
         status = 0
 
     # Параметры кулдауна
-    base_cd_seconds = 12 * 3600            # базовый КД — 12 часов
-    reduction_per_status = 5 * 60          # уменьшение КД на каждый статус — 5 минут
-    min_cd_seconds = 40 * 60               # минимальный КД — 40 минут
+    base_cd_seconds = 12 * 3600  # базовый КД — 12 часов
+    reduction_per_status = 5 * 60  # уменьшение КД на каждый статус — 5 минут
+    min_cd_seconds = 40 * 60  # минимальный КД — 40 минут
 
     # Статус 22 — особый: КД 30 минут и 2 спина
     if status == 22:
@@ -910,10 +948,10 @@ async def baraban_handler(message: types.Message):
             chat_id=message.chat.id,
             message_id=sent.message_id,
             caption=(
-                f"🎉 {await gsname(name, message.from_user.id)}, твой приз:\n{prize_text}\n\n"
-                f"Итого: {summary}\n\n"
-                f"КД барабана для твоего статуса ({get_status(status)}): {int(final_cd_seconds//3600)}ч {int((final_cd_seconds%3600)//60)}м."
-                + (f"\n(Статус \"♠️ Масть\" даёт 2 спина.)" if status == 22 else "")
+                    f"🎉 {await gsname(name, message.from_user.id)}, твой приз:\n{prize_text}\n\n"
+                    f"Итого: {summary}\n\n"
+                    f"КД барабана для твоего статуса ({get_status(status)}): {int(final_cd_seconds // 3600)}ч {int((final_cd_seconds % 3600) // 60)}м."
+                    + (f"\n(Статус \"♠️ Масть\" даёт 2 спина.)" if status == 22 else "")
             )
         )
     except Exception:
@@ -921,12 +959,14 @@ async def baraban_handler(message: types.Message):
         await message.reply(
             f"🎉 {await gsname(name, message.from_user.id)}, твой приз:\n{prize_text}\n\n"
             f"Итого: {summary}\n\n"
-            f"КД барабана для твоего статуса ({get_status(status)}): {int(final_cd_seconds//3600)}ч {int((final_cd_seconds%3600)//60)}м."
+            f"КД барабана для твоего статуса ({get_status(status)}): {int(final_cd_seconds // 3600)}ч {int((final_cd_seconds % 3600) // 60)}м."
             + (f"\n(Статус \"♠️ Масть\" даёт 2 спина.)" if status == 22 else "")
         )
 
+
 class DonateState(StatesGroup):
     waiting_for_amount = State()
+
 
 @dp.message(F.text.lower().in_(["/donate", "/donation", "донат"]))
 async def donate_menu(message: Message):
@@ -956,9 +996,10 @@ async def donate_menu(message: Message):
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="💎 Купить GGs", callback_data="donate_buy")]
-        #[InlineKeyboardButton(text="🔥 Топ Донатеров", callback_data="donate_top")]
+        # [InlineKeyboardButton(text="🔥 Топ Донатеров", callback_data="donate_top")]
     ])
     await message.reply(text, reply_markup=kb, parse_mode="HTML")
+
 
 @dp.callback_query(F.data == "donate_buy")
 async def donate_buy_menu(callback: CallbackQuery):
@@ -1049,6 +1090,7 @@ async def donate_process(callback: CallbackQuery):
 async def checkout(pre_checkout_query: PreCheckoutQuery):
     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
 
+
 async def check_and_set_top1_status(message, user_id: str):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -1064,6 +1106,7 @@ async def check_and_set_top1_status(message, user_id: str):
         await message.answer("👑 Ты стал Топ-1 донатером! Тебе выдан статус #10.")
 
     conn.close()
+
 
 async def get_top_donators(limit=10):
     conn = sqlite3.connect(DB_PATH)
@@ -1119,7 +1162,10 @@ async def referrals_info(message: Message):
 
     count = data.get("referrals", 0)
     link = f"https://t.me/gmegadbot?start={user_id}"
-    await message.reply(f'✌️ {await gsname(message.from_user.first_name, message.from_user.id)}, твои реффералы: {count} человек.\n⛓ Твоя ссылка: {html.code(link)}', disable_web_page_preview=True)
+    await message.reply(
+        f'✌️ {await gsname(message.from_user.first_name, message.from_user.id)}, твои реффералы: {count} человек.\n⛓ Твоя ссылка: {html.code(link)}',
+        disable_web_page_preview=True)
+
 
 @dp.message(F.text.lower().startswith("промо"))
 async def handle_promo(message: Message):
@@ -1144,14 +1190,16 @@ async def handle_promo(message: Message):
 
         if not row:
             conn.close()
-            return await message.reply(f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, такого промокода не существует.")
+            return await message.reply(
+                f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, такого промокода не существует.")
 
         reward, claimed_json = row
         claimed = json.loads(claimed_json)
 
         if user_id in claimed:
             conn.close()
-            return await message.reply(f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, вы уже активировали этот промокод!")
+            return await message.reply(
+                f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, вы уже активировали этот промокод!")
 
         # додаємо користувача в список
         claimed.append(user_id)
@@ -1170,8 +1218,9 @@ async def handle_promo(message: Message):
 
 
 class CreateCheckStates(StatesGroup):
-    awaiting_amount = State()   # ждём ввод суммы на одного (если ручной ввод)
-    awaiting_count = State()    # ждём ввод количества активаций (если ручной ввод)
+    awaiting_amount = State()  # ждём ввод суммы на одного (если ручной ввод)
+    awaiting_count = State()  # ждём ввод количества активаций (если ручной ввод)
+
 
 # ---- вспомогалки ----
 PRESET_AMOUNTS = [100, 1_000, 10_000, 100_000]
@@ -1181,8 +1230,10 @@ MAX_PER_USER = 100_000
 UNLOCK_PRICE = 500000
 ADMIN_ID = "8493326566"  # твой id, у него нет ограничений
 
+
 def mk_inline_keyboard(rows: List[List[InlineKeyboardButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
 
 @dp.message(F.text.lower().in_(["/check", "чеки", "чек"]))
 async def cmd_check_panel(message: Message):
@@ -1211,7 +1262,8 @@ async def cmd_check_panel(message: Message):
     kb_rows.append([InlineKeyboardButton(text="✍️ Создать чек", callback_data="check_panel:create")])
     kb_rows.append([InlineKeyboardButton(text="📂 Мои чеки", callback_data="check_panel:my")])
     if not has_unlock:
-        kb_rows.append([InlineKeyboardButton(text=f"🔒 Купить доступ ({format_balance(UNLOCK_PRICE)} mDrops)", callback_data="buy_check_unlock")])
+        kb_rows.append([InlineKeyboardButton(text=f"🔒 Купить доступ ({format_balance(UNLOCK_PRICE)} mDrops)",
+                                             callback_data="buy_check_unlock")])
     kb_rows.append([InlineKeyboardButton(text="❌ Закрыть", callback_data="check_panel:close")])
 
     kb = InlineKeyboardMarkup(inline_keyboard=kb_rows)
@@ -1221,6 +1273,7 @@ async def cmd_check_panel(message: Message):
         "➡️ Здесь вы можете создавать чеки, просматривать свои активные чеки и купить доступ (единовременно).",
         reply_markup=kb
     )
+
 
 # ---- старт создания: открывает меню выбора суммы ----
 @dp.callback_query(F.data == "check_panel:create")
@@ -1232,7 +1285,8 @@ async def check_panel_create_start(query: CallbackQuery, state: FSMContext):
         data = await load_data(user_id)
 
     if not bool(data.get("check_unlocked", False)):
-        kb = mk_inline_keyboard([[InlineKeyboardButton(text=f"Купить доступ ({format_balance(UNLOCK_PRICE)} mDrops)", callback_data="buy_check_unlock")]])
+        kb = mk_inline_keyboard([[InlineKeyboardButton(text=f"Купить доступ ({format_balance(UNLOCK_PRICE)} mDrops)",
+                                                       callback_data="buy_check_unlock")]])
         try:
             await query.message.edit_text(
                 f"🔒 Чтобы создавать чеки, нужно купить доступ — {format_balance(UNLOCK_PRICE)} mDrops.",
@@ -1267,6 +1321,7 @@ async def check_panel_create_start(query: CallbackQuery, state: FSMContext):
 
     # очищаем стейт на всякий случай
     await state.clear()
+
 
 # ---- callback: выбранная сумма (preset или custom) ----
 @dp.callback_query(F.data.startswith("check_amount:"))
@@ -1303,6 +1358,7 @@ async def check_amount_callback(query: CallbackQuery, state: FSMContext):
     await state.update_data(per_user=int(per_user))
     await show_counts_menu(query, state, per_user, balance)
     return await query.answer()
+
 
 # ---- helper: показывает меню выбора количества (кнопки + ручной ввод) ----
 async def show_counts_menu(query: CallbackQuery, state: FSMContext, per_user: int, balance: int):
@@ -1344,6 +1400,7 @@ async def show_counts_menu(query: CallbackQuery, state: FSMContext, per_user: in
         )
     except:
         pass
+
 
 # ---- callback: выбранное количество (preset или custom) ----
 @dp.callback_query(F.data.startswith("check_count:"))
@@ -1387,7 +1444,7 @@ async def check_count_callback(query: CallbackQuery, state: FSMContext):
     # всё ок — показываем подтверждение (используем confirm_check callback)
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="✅ Подтвердить создание", callback_data=f"confirm_check:{count}:{per_user}")
-    ],[
+    ], [
         InlineKeyboardButton(text="❌ Отмена", callback_data="check_cancel")
     ]])
     try:
@@ -1406,6 +1463,7 @@ async def check_count_callback(query: CallbackQuery, state: FSMContext):
     # очищаем стейт
     await state.clear()
     return await query.answer()
+
 
 # ---- message handler: ручной ввод суммы (state awaiting_amount) ----
 @dp.message(CreateCheckStates.awaiting_amount)
@@ -1473,6 +1531,7 @@ async def manual_amount_input(msg: Message, state: FSMContext):
     )
     await state.clear()  # считывание завершено; остальные шаги работают через callback'и
 
+
 # ---- message handler: ручной ввод количества (state awaiting_count) ----
 @dp.message(CreateCheckStates.awaiting_count)
 async def manual_count_input(msg: Message, state: FSMContext):
@@ -1513,7 +1572,7 @@ async def manual_count_input(msg: Message, state: FSMContext):
 
     kb = InlineKeyboardMarkup(inline_keyboard=[[
         InlineKeyboardButton(text="✅ Подтвердить создание", callback_data=f"confirm_check:{count}:{per_user}")
-    ],[
+    ], [
         InlineKeyboardButton(text="❌ Отмена", callback_data="check_cancel")
     ]])
     await msg.reply(
@@ -1543,7 +1602,8 @@ async def buy_check_unlock_callback(query: CallbackQuery):
             kb = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="🍓 Перейти в ЛС", url=f"https://t.me/{(await bot.get_me()).username}")]
             ])
-            return await query.message.edit_text("🔒 Покупка доступа доступна только в личных сообщениях с ботом.", reply_markup=kb)
+            return await query.message.edit_text("🔒 Покупка доступа доступна только в личных сообщениях с ботом.",
+                                                 reply_markup=kb)
     except Exception:
         # если не можем определить тип чата, продолжаем, но будем работать аккуратно
         pass
@@ -1664,6 +1724,7 @@ async def check_cancel_callback(query: CallbackQuery, state: FSMContext):
         pass
     return await query.answer()
 
+
 @dp.callback_query(F.data.startswith("confirm_check:"))
 async def confirm_check_callback_panel(query: CallbackQuery):
     """Робочий confirm_check handler з логуванням та захистом від помилок."""
@@ -1699,7 +1760,8 @@ async def confirm_check_callback_panel(query: CallbackQuery):
         total_with_unlock = total_cost + (UNLOCK_PRICE if needs_unlock else 0)
 
         if int(data.get("coins", 0)) < total_with_unlock:
-            await query.message.edit_text(f"❗ Недостаточно средств. Нужна сумма: {format_balance(total_with_unlock)} mDrops.")
+            await query.message.edit_text(
+                f"❗ Недостаточно средств. Нужна сумма: {format_balance(total_with_unlock)} mDrops.")
             return
 
         # Списываем деньги
@@ -1806,6 +1868,7 @@ def _sync_load_all_checks() -> Dict[str, Dict[str, Any]]:
             out[str(d.get("code"))] = d
     return out
 
+
 def _sync_list_checks_by_creator(user_id: str) -> Dict[str, Dict[str, Any]]:
     """
     Синхронно получить все чеки, у которых creator_id == user_id.
@@ -1835,6 +1898,7 @@ def _sync_list_checks_by_creator(user_id: str) -> Dict[str, Dict[str, Any]]:
             res[str(d.get("code"))] = d
     return res
 
+
 # ----------------- Асинхронные обёртки для использования в хендлерах -----------------
 
 async def load_all_checks() -> Dict[str, Dict[str, Any]]:
@@ -1844,12 +1908,14 @@ async def load_all_checks() -> Dict[str, Dict[str, Any]]:
     """
     return await asyncio.to_thread(_sync_load_all_checks)
 
+
 async def list_checks_by_creator(user_id: str) -> Dict[str, Dict[str, Any]]:
     """
     Асинхронная обёртка над _sync_list_checks_by_creator.
     Возвращает dict code->check_data только для данного user_id.
     """
     return await asyncio.to_thread(_sync_list_checks_by_creator, str(user_id))
+
 
 # ----------------- Универсальная, робастная функция, совместимая с вашим кодом -----------------
 
@@ -1910,6 +1976,7 @@ async def list_checks_by_creator_or_empty(user_id: str) -> Dict[str, Dict[str, A
         # молча возвращаем пустое множество — вызывающий код корректно обработает отсутствие чеков
         return {}
 
+
 def _sync_delete_check(code: str) -> bool:
     """Синхронно удаляет чек из таблицы checks. Возвращает True если удалено."""
     code = str(code)
@@ -1931,18 +1998,22 @@ def _sync_delete_check(code: str) -> bool:
         conn.commit()
         return True
 
+
 # Асинхронные обёртки
 async def async_load_check(code: str) -> dict:
     """Асинхронно вызывает sync load_check через to_thread."""
     return await asyncio.to_thread(load_check, code)
 
+
 async def async_save_check(code: str, data: dict) -> None:
     """Асинхронно вызывает sync save_check через to_thread."""
     return await asyncio.to_thread(save_check, code, data)
 
+
 async def async_delete_check(code: str) -> bool:
     """Асинхронно удаляет чек через to_thread."""
     return await asyncio.to_thread(_sync_delete_check, code)
+
 
 # ----------------- view_check handler: показать детальную информацию -----------------
 @dp.callback_query(F.data.startswith("view_check:"))
@@ -2053,6 +2124,7 @@ async def view_check_callback(query: CallbackQuery):
         # если не можем редактировать — отправим новое сообщение
         await query.message.answer(text, parse_mode="HTML", reply_markup=kb)
 
+
 # ----------------- delete_check handler: удаление чека -----------------
 @dp.callback_query(F.data.startswith("delete_check:"))
 async def delete_check_callback(query: CallbackQuery):
@@ -2126,7 +2198,8 @@ async def delete_check_callback(query: CallbackQuery):
         deleted = await async_delete_check(code)
     except Exception as exc:
         deleted = False
-        append_log({"event": "delete_check_delete_error", "code": code, "creator_id": creator_id, "error": repr(exc)}, add_timestamp=True)
+        append_log({"event": "delete_check_delete_error", "code": code, "creator_id": creator_id, "error": repr(exc)},
+                   add_timestamp=True)
 
     if not deleted:
         try:
@@ -2177,7 +2250,8 @@ async def delete_check_callback(query: CallbackQuery):
         if total_back_amt > 0 and refunded:
             await query.message.edit_text(f"✅ Чек успешно удалён.\n{refund_note}")
         elif total_back_amt > 0 and not refunded:
-            await query.message.edit_text("✅ Чек удалён, но не удалось вернуть средства создателю. Администратор уведомлён.")
+            await query.message.edit_text(
+                "✅ Чек удалён, но не удалось вернуть средства создателю. Администратор уведомлён.")
         else:
             await query.message.edit_text("✅ Чек успешно удалён. Возврат не требуется (нет оставшихся активаций).")
     except Exception:
@@ -2195,12 +2269,15 @@ async def delete_check_callback(query: CallbackQuery):
             try:
                 # попытаемся отправить личное сообщение создателю
                 await bot.send_message(int(creator_id),
-                    f"🔔 Ваш чек ({code}) был удалён. На ваш баланс возвращено {format_balance(total_back_amt)} mDrops.")
+                                       f"🔔 Ваш чек ({code}) был удалён. На ваш баланс возвращено {format_balance(total_back_amt)} mDrops.")
             except Exception:
                 # не критично, просто логируем неудачную отправку
-                append_log({"event": "notify_creator_failed", "creator_id": creator_id, "code": code}, add_timestamp=True)
+                append_log({"event": "notify_creator_failed", "creator_id": creator_id, "code": code},
+                           add_timestamp=True)
     except Exception:
         pass
+
+
 @dp.callback_query(F.data == "check_panel:my")
 async def check_panel_my(query: CallbackQuery):
     """
@@ -2233,7 +2310,8 @@ async def check_panel_my(query: CallbackQuery):
             ch = checks[code] or {}
             per = ch.get("per_user", ch.get("amount", "—"))
             rem = ch.get("remaining", ch.get("left", 0))
-            lines.append(f"• <b>{code}</b> — {format_balance(int(per)) if isinstance(per, int) else per} mDrops, осталось: {rem}")
+            lines.append(
+                f"• <b>{code}</b> — {format_balance(int(per)) if isinstance(per, int) else per} mDrops, осталось: {rem}")
             kb_rows.append([
                 InlineKeyboardButton(text=f"🔍 {code}", callback_data=f"view_check:{code}"),
                 InlineKeyboardButton(text="🗑️ Отменить", callback_data=f"delete_check:{code}")
@@ -2257,13 +2335,16 @@ async def check_panel_my(query: CallbackQuery):
         except:
             pass
 
+
 try:
     # Python 3.9+
     from zoneinfo import ZoneInfo
+
     KYIV_TZ = ZoneInfo("Europe/Kyiv")
 except Exception:
     # fallback — використовуємо UTC, якщо zoneinfo відсутній
     from datetime import timezone
+
     KYIV_TZ = timezone.utc
 
 DAILY_TRANSFER_LIMIT = 1_000_000  # щоденний ліміт на передачі (грубо, до комісії)
@@ -2273,7 +2354,8 @@ DAILY_TRANSFER_LIMIT = 1_000_000  # щоденний ліміт на перед�
 async def transfer_command(message: Message):
     try:
         if not message.reply_to_message:
-            return await message.reply(f"🤨 {await gsname(message.from_user.first_name, message.from_user.id)}, чтобы передать mDrops — ответь сообщением пользователю, которому хочешь передать!")
+            return await message.reply(
+                f"🤨 {await gsname(message.from_user.first_name, message.from_user.id)}, чтобы передать mDrops — ответь сообщением пользователю, которому хочешь передать!")
 
         sender_id = str(message.from_user.id)
         recipient_id = str(message.reply_to_message.from_user.id)
@@ -2285,11 +2367,13 @@ async def transfer_command(message: Message):
             await create_user_data(recipient_id)
 
         if sender_id == recipient_id:
-            return await message.reply(f"🫵 {await gsname(message.from_user.first_name, message.from_user.id)}, ты не можешь передать mDrops самому себе!")
+            return await message.reply(
+                f"🫵 {await gsname(message.from_user.first_name, message.from_user.id)}, ты не можешь передать mDrops самому себе!")
 
         # Запрещённые получатели (как в твоём коде) — оставил как есть
         if int(recipient_id) in (8257726098, 8375492513):
-            return await message.reply(f"😁 {await gsname(message.from_user.first_name, message.from_user.id)}, я не принимаю подарки!")
+            return await message.reply(
+                f"😁 {await gsname(message.from_user.first_name, message.from_user.id)}, я не принимаю подарки!")
 
         # Загружаем данные отправителя
         data = await load_data(sender_id)
@@ -2331,11 +2415,13 @@ async def transfer_command(message: Message):
         # Определяем желаемую сумму (gross — сумма до комиссии)
         if amount_text in ["все", "всё"]:
             if remaining_limit <= 0:
-                return await message.reply(f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, дневной лимит переводов исчерпан.")
+                return await message.reply(
+                    f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, дневной лимит переводов исчерпан.")
             # "все" означает максимум, который можно отправить сейчас — минимум из баланса и остатка лимита
             amount = min(user_balance, remaining_limit)
             if amount <= 0:
-                return await message.reply(f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, нет доступных mDrops для отправки.")
+                return await message.reply(
+                    f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, нет доступных mDrops для отправки.")
         else:
             try:
                 amount = parse_bet_input(amount_text) if "к" in amount_text else int(amount_text)
@@ -2347,7 +2433,8 @@ async def transfer_command(message: Message):
 
             # Проверка лимита
             if remaining_limit <= 0:
-                return await message.reply(f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, дневной лимит переводов ( {format_balance(DAILY_TRANSFER_LIMIT)} mDrops ) уже исчерпан.")
+                return await message.reply(
+                    f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, дневной лимит переводов ( {format_balance(DAILY_TRANSFER_LIMIT)} mDrops ) уже исчерпан.")
             if amount > remaining_limit:
                 return await message.reply(
                     f"⚠️ {await gsname(message.from_user.first_name, message.from_user.id)}, сегодня можно передать ещё {format_balance(remaining_limit)} mDrops. Попробуй меньшую сумму."
@@ -2356,7 +2443,8 @@ async def transfer_command(message: Message):
         # Проверка баланса
         if amount > user_balance:
             short = amount - user_balance
-            return await message.reply(f"☹️ {await gsname(message.from_user.first_name, message.from_user.id)}, тебе не хватает {format_balance(short)} mDrops!")
+            return await message.reply(
+                f"☹️ {await gsname(message.from_user.first_name, message.from_user.id)}, тебе не хватает {format_balance(short)} mDrops!")
 
         # Рассчитываем комиссию 15%
         fee = amount * 15 // 100
@@ -2402,6 +2490,7 @@ async def transfer_command(message: Message):
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 108)
 
+
 # кеш топу
 TOP_CACHE = {
     "time": 0,
@@ -2409,6 +2498,7 @@ TOP_CACHE = {
 }
 
 CACHE_TTL = 10  # сек, скільки живе кеш (можеш змінити)
+
 
 @dp.message(F.text.lower().in_(["/top", "топ", "/top@gmegadbot"]))
 async def top_players(message: Message, bot: Bot):
@@ -2470,14 +2560,19 @@ async def top_players(message: Message, bot: Bot):
         await handle_error(message.from_user.username, e, message.from_user.id, 109)
 
 
-
 @dp.message(F.text.lower().in_(["/help", "помощь", "поддержка", "/help@gmegadbot"]))
 async def handle_help(message: Message):
     uid = message.from_user.id
-    kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="📦 ИГРЫ", callback_data=f"callback_games_from_help:{uid}"), InlineKeyboardButton(text="📕 ПРАВИЛА", url="sleet-windflower-6df.notion.site/GMEGADBOT-256118305d388059ae2ff01896163f6a?pvs=73")]]))
+    kb = InlineKeyboardMarkup(inline_keyboard=(
+    [[InlineKeyboardButton(text="📦 ИГРЫ", callback_data=f"callback_games_from_help:{uid}"),
+      InlineKeyboardButton(text="📕 ПРАВИЛА",
+                           url="sleet-windflower-6df.notion.site/GMEGADBOT-256118305d388059ae2ff01896163f6a?pvs=73")]]))
 
-    await message.reply(f"📖 {await gsname(message.from_user.first_name, message.from_user.id)}, ты в меню помощи!\n\n📌 {html.bold("Существующие команды")}:{html.blockquote(f"{html.bold("/balance")} - ваш баланс\n{html.bold("/profile")} - ваш профиль\n{html.bold("/bonus")} - получить бонус (раз в час)\n{html.bold("/daily")} - получить ежедневный бонус (раз в 24 часа)\n{html.bold("/referrals")} - ваша реферальная ссылка\n{html.bold("/check")} - меню для создания чеков"
-                         f"\n{html.bold("/cases")} - кейсы\n{html.bold("/top")} - мировой топ по mDrops\n{html.bold("/exchange")} - обменник GGs/mDrops\n{html.bold("/baraban")} - барабан бонусов (раз в 12 часов)\n{html.bold("/donation")} - донат меню\n{html.bold("/earn")} - заработать GGs\n{html.bold("/promotion")} - реклама канала/группы\n{html.bold("/bank")} - банк\n{html.bold("/partners")} - партнерская программа\n{html.bold("/shop")} - магазин")}\n\n🛡 Контакты: {html.blockquote(f"{html.bold("Владалец/разработчик:")} t.me/sollamon\n{html.bold("Канал:")} t.me/saycursed\n{html.bold("Чат:")} t.me/saycurse\n{html.bold("Бот Поддержки")}: @gmegasupbot\n")}", reply_markup=kb, disable_web_page_preview=True)
+    await message.reply(
+        f"📖 {await gsname(message.from_user.first_name, message.from_user.id)}, ты в меню помощи!\n\n📌 {html.bold("Существующие команды")}:{html.blockquote(f"{html.bold("/balance")} - ваш баланс\n{html.bold("/profile")} - ваш профиль\n{html.bold("/bonus")} - получить бонус (раз в час)\n{html.bold("/daily")} - получить ежедневный бонус (раз в 24 часа)\n{html.bold("/referrals")} - ваша реферальная ссылка\n{html.bold("/check")} - меню для создания чеков"
+                                                                                                                                                            f"\n{html.bold("/cases")} - кейсы\n{html.bold("/top")} - мировой топ по mDrops\n{html.bold("/exchange")} - обменник GGs/mDrops\n{html.bold("/baraban")} - барабан бонусов (раз в 12 часов)\n{html.bold("/donation")} - донат меню\n{html.bold("/earn")} - заработать GGs\n{html.bold("/promotion")} - реклама канала/группы\n{html.bold("/bank")} - банк\n{html.bold("/partners")} - партнерская программа\n{html.bold("/shop")} - магазин")}\n\n🛡 Контакты: {html.blockquote(f"{html.bold("Владалец/разработчик:")} t.me/sollamon\n{html.bold("Канал:")} t.me/saycursed\n{html.bold("Чат:")} t.me/saycurse\n{html.bold("Бот Поддержки")}: @gmegasupbot\n")}",
+        reply_markup=kb, disable_web_page_preview=True)
+
 
 @dp.callback_query(F.data.startswith("help_callback"))
 async def handle_help(callback: CallbackQuery):
@@ -2485,10 +2580,16 @@ async def handle_help(callback: CallbackQuery):
     if int(callback.data.split(":")[1]) != int(uid):
         await callback.answer("Это не твоя кнопка!")
 
-    kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="📦 ИГРЫ", callback_data=f"callback_games_from_help:{uid}"), InlineKeyboardButton(text="📕 ПРАВИЛА", url="sleet-windflower-6df.notion.site/GMEGADBOT-256118305d388059ae2ff01896163f6a?pvs=73")]]))
+    kb = InlineKeyboardMarkup(inline_keyboard=(
+    [[InlineKeyboardButton(text="📦 ИГРЫ", callback_data=f"callback_games_from_help:{uid}"),
+      InlineKeyboardButton(text="📕 ПРАВИЛА",
+                           url="sleet-windflower-6df.notion.site/GMEGADBOT-256118305d388059ae2ff01896163f6a?pvs=73")]]))
 
-    await callback.message.edit_text(f"📖 {await gsname(callback.from_user.first_name, callback.from_user.id)}, ты в меню помощи!\n\n📌 {html.bold("Существующие команды")}:{html.blockquote(f"{html.bold("/balance")} - ваш баланс\n{html.bold("/profile")} - ваш профиль\n{html.bold("/bonus")} - получить бонус (раз в час)\n{html.bold("/daily")} - получить ежедневный бонус (раз в 24 часа)\n{html.bold("/referrals")} - ваша реферальная ссылка\n{html.bold("/check")} - меню для создания чеков"
-                         f"\n{html.bold("/cases")} - кейсы\n{html.bold("/top")} - мировой топ по mDrops\n{html.bold("/exchange")} - обменник GGs/mDrops\n{html.bold("/baraban")} - барабан бонусов (раз в 12 часов)\n{html.bold("/donation")} - донат меню\n{html.bold("/earn")} - заработать GGs\n{html.bold("/promotion")} - реклама канала/группы\n{html.bold("/bank")} - банк")}\n\n🛡 Контакты: {html.blockquote(f"{html.bold("Владалец/разработчик:")} t.me/sollamon\n{html.bold("Канал:")} t.me/saycursed\n{html.bold("Чат:")} t.me/saycurse\n{html.bold("Бот Поддержки")}: @gmegasupbot\n")}", reply_markup=kb, disable_web_page_preview=True)
+    await callback.message.edit_text(
+        f"📖 {await gsname(callback.from_user.first_name, callback.from_user.id)}, ты в меню помощи!\n\n📌 {html.bold("Существующие команды")}:{html.blockquote(f"{html.bold("/balance")} - ваш баланс\n{html.bold("/profile")} - ваш профиль\n{html.bold("/bonus")} - получить бонус (раз в час)\n{html.bold("/daily")} - получить ежедневный бонус (раз в 24 часа)\n{html.bold("/referrals")} - ваша реферальная ссылка\n{html.bold("/check")} - меню для создания чеков"
+                                                                                                                                                              f"\n{html.bold("/cases")} - кейсы\n{html.bold("/top")} - мировой топ по mDrops\n{html.bold("/exchange")} - обменник GGs/mDrops\n{html.bold("/baraban")} - барабан бонусов (раз в 12 часов)\n{html.bold("/donation")} - донат меню\n{html.bold("/earn")} - заработать GGs\n{html.bold("/promotion")} - реклама канала/группы\n{html.bold("/bank")} - банк")}\n\n🛡 Контакты: {html.blockquote(f"{html.bold("Владалец/разработчик:")} t.me/sollamon\n{html.bold("Канал:")} t.me/saycursed\n{html.bold("Чат:")} t.me/saycurse\n{html.bold("Бот Поддержки")}: @gmegasupbot\n")}",
+        reply_markup=kb, disable_web_page_preview=True)
+
 
 # -------------- CLANES -------------- #
 
@@ -2527,6 +2628,7 @@ async def update_clan_request(user_id: str, clan_name: str, status: str) -> bool
     conn.close()
     return updated
 
+
 def get_all_clans():
     """Отримує усі клани з бази"""
     conn = sqlite3.connect(DB_PATH)
@@ -2559,6 +2661,7 @@ async def create_clan(name: str, owner_id: str) -> bool:
     conn.commit()
     conn.close()
     return True
+
 
 async def load_clan(name: str) -> dict | None:
     """Завантажує дані клану за його назвою"""
@@ -2610,6 +2713,7 @@ async def save_clan(name: str, data: dict) -> bool:
     finally:
         conn.close()
 
+
 def contains_emoji(text: str) -> bool:
     emoji_pattern = re.compile(
         "[\U0001F600-\U0001F64F"  # смайли
@@ -2622,6 +2726,7 @@ def contains_emoji(text: str) -> bool:
         "]+", flags=re.UNICODE
     )
     return bool(emoji_pattern.search(text))
+
 
 class ClanStates(StatesGroup):
     waiting_for_name = State()
@@ -2652,11 +2757,12 @@ async def handle_clan_command(message: Message):
         await create_user_data(user_id)
         data = await load_data(user_id)
 
-
     clan_name = data.get("clan", None)
 
     if not clan_name:
-        kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")], [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
+        kb = InlineKeyboardMarkup(inline_keyboard=(
+        [[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")],
+         [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
         return await message.reply(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!", reply_markup=kb)
 
     clan_data = await load_clan(str(clan_name))
@@ -2696,8 +2802,10 @@ async def handle_clan_command(message: Message):
                                InlineKeyboardButton(text="Топ кланов", callback_data="top_clans:1")],
                               [InlineKeyboardButton(text="Покинуть клан", callback_data=f"leave_clan:{clan_name}")]]))
 
+    await message.reply(
+        f"{await gsname(name, user_id)} твой клан:\n🛡 Название: {clan_name}\n💰 Казна: {format_balance(clan_data["coffres"])} mDrops\n⚜️ Уровень Клана: {clan_data["level"]}\n🏆 Рейтинг: {clan_data["rating"]}\n👤 Твоя роль: {player_accept}\n👥 Участников: {total_members}/{total_members_available}",
+        reply_markup=kb)
 
-    await message.reply(f"{await gsname(name, user_id)} твой клан:\n🛡 Название: {clan_name}\n💰 Казна: {format_balance(clan_data["coffres"])} mDrops\n⚜️ Уровень Клана: {clan_data["level"]}\n🏆 Рейтинг: {clan_data["rating"]}\n👤 Твоя роль: {player_accept}\n👥 Участников: {total_members}/{total_members_available}", reply_markup=kb)
 
 @dp.callback_query(F.data == "upgrade_clan")
 @flood_protect(min_delay=0.5)
@@ -2710,12 +2818,14 @@ async def handle_upgrade_clan(callback: CallbackQuery):
         await create_user_data(user_id)
         data = await load_data(user_id)
 
-
     clan_name = data.get("clan", None)
 
     if not clan_name:
-        kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")], [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
-        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!", reply_markup=kb)
+        kb = InlineKeyboardMarkup(inline_keyboard=(
+        [[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")],
+         [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
+        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!",
+                                                reply_markup=kb)
 
     clan_data = await load_clan(str(clan_name))
     clan_level = clan_data["level"]
@@ -2734,16 +2844,20 @@ async def handle_upgrade_clan(callback: CallbackQuery):
         return await callback.message.edit_text(f"{await gsname(name, user_id)} ты не имеешь доступа сюда!")
 
     if clan_level >= 5:
-        return await callback.message.edit_text(f"{await gsname(name, user_id)} уровень твоего клана уже максимальный (5 ур.)!")
+        return await callback.message.edit_text(
+            f"{await gsname(name, user_id)} уровень твоего клана уже максимальный (5 ур.)!")
 
     price = clan_level * 250000
     if price > clan_data["coffres"]:
-        return await callback.answer(f"Не достаточно mDrops для улучшения клана!\n\nЦена улучшения: {format_balance(price)} mDrops", show_alert=True)
+        return await callback.answer(
+            f"Не достаточно mDrops для улучшения клана!\n\nЦена улучшения: {format_balance(price)} mDrops",
+            show_alert=True)
 
     clan_data["coffres"] -= price
     clan_data["level"] += 1
     await save_clan(clan_name, clan_data)
-    await callback.message.edit_text(f"{await gsname(name, user_id)}, ты успешно увеличил уровень клана до {clan_data["level"]}!")
+    await callback.message.edit_text(
+        f"{await gsname(name, user_id)}, ты успешно увеличил уровень клана до {clan_data["level"]}!")
 
 
 @dp.callback_query(F.data == "clan_callback")
@@ -2757,12 +2871,14 @@ async def handle_clan_command(callback: CallbackQuery):
         await create_user_data(user_id)
         data = await load_data(user_id)
 
-
     clan_name = data.get("clan", None)
 
     if not clan_name:
-        kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")], [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
-        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!", reply_markup=kb)
+        kb = InlineKeyboardMarkup(inline_keyboard=(
+        [[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")],
+         [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
+        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!",
+                                                reply_markup=kb)
 
     clan_data = await load_clan(str(clan_name))
     clan_level = clan_data["level"]
@@ -2801,7 +2917,10 @@ async def handle_clan_command(callback: CallbackQuery):
                                InlineKeyboardButton(text="Топ кланов", callback_data="top_clans:1")],
                               [InlineKeyboardButton(text="Покинуть клан", callback_data=f"leave_clan:{clan_name}")]]))
 
-    await callback.message.edit_text(f"{await gsname(name, user_id)} твой клан:\n🛡 Название: {clan_name}\n💰 Казна: {format_balance(clan_data["coffres"])} mDrops\n⚜️ Уровень Клана: {clan_data["level"]}\n🏆 Рейтинг: {clan_data["rating"]}\n👤 Твоя роль: {player_accept}\n👥 Участников: {total_members}/{total_members_available}", reply_markup=kb)
+    await callback.message.edit_text(
+        f"{await gsname(name, user_id)} твой клан:\n🛡 Название: {clan_name}\n💰 Казна: {format_balance(clan_data["coffres"])} mDrops\n⚜️ Уровень Клана: {clan_data["level"]}\n🏆 Рейтинг: {clan_data["rating"]}\n👤 Твоя роль: {player_accept}\n👥 Участников: {total_members}/{total_members_available}",
+        reply_markup=kb)
+
 
 @dp.callback_query(F.data.startswith("delete_clan:"))
 async def handle_delete_clan_request(callback: CallbackQuery, state: FSMContext):
@@ -2827,6 +2946,7 @@ async def handle_delete_clan_request(callback: CallbackQuery, state: FSMContext)
 
     await state.update_data(clan_to_delete=clan_name, owner_id=caller_id)
     await state.set_state(ClanStates.waiting_for_delete_confirm)
+
 
 @dp.message(ClanStates.waiting_for_delete_confirm)
 async def handle_confirm_delete(message: Message, state: FSMContext):
@@ -2882,6 +3002,7 @@ async def handle_confirm_delete(message: Message, state: FSMContext):
         except Exception:
             pass
 
+
 @dp.callback_query(F.data == "clan_coffer")
 async def handle_clan_coffer(query: CallbackQuery):
     user_id = query.from_user.id
@@ -2897,7 +3018,6 @@ async def handle_clan_coffer(query: CallbackQuery):
     if not clan_name:
         return await query.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!")
 
-
     clan_data = await load_clan(str(clan_name))
     clan_level = clan_data["level"]
     player_accept = None
@@ -2911,13 +3031,17 @@ async def handle_clan_coffer(query: CallbackQuery):
         return await handle_error(query.from_user.username, "error when checking clan level (player)", user_id, 123)
 
     if player_accept == "Владелец" or player_accept == "Админ":
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Пополнить Казну", callback_data="add_money_to_clan_coffer"), InlineKeyboardButton(text="Выдать Деньги", callback_data="give_money_to_player_clan")]])
-        return await query.message.edit_text(f"{await gsname(name, user_id)}, ты в казне клана, выбери действие:", reply_markup=kb)
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="Пополнить Казну", callback_data="add_money_to_clan_coffer"),
+             InlineKeyboardButton(text="Выдать Деньги", callback_data="give_money_to_player_clan")]])
+        return await query.message.edit_text(f"{await gsname(name, user_id)}, ты в казне клана, выбери действие:",
+                                             reply_markup=kb)
     else:
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Пополнить Казну", callback_data="add_money_to_clan_coffer")]])
         return await query.message.edit_text(f"{await gsname(name, user_id)}, ты в казне клана, выбери действие:",
                                              reply_markup=kb)
+
 
 @dp.callback_query(F.data == "give_money_to_player_clan")
 async def handle_give_money_to_player_clan(query: CallbackQuery, state: FSMContext):
@@ -2930,7 +3054,6 @@ async def handle_give_money_to_player_clan(query: CallbackQuery, state: FSMConte
         data = await load_data(user_id)
 
     clan_name = data.get("clan", None)
-
 
     if not clan_name:
         return await query.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!")
@@ -2988,7 +3111,8 @@ async def handle_waiting_for_amount_to_give_from_coffer(msg: Message, state: FSM
     try:
         amount = parse_bet_input(msg.text)
     except:
-        return await msg.answer(f"{await gsname(name, user_id)}, введи количество mDrops для выдачи (1к, 50к, 100к)\n\nБаланс казны: {format_balance(clan_data["coffres"])} mDrops")
+        return await msg.answer(
+            f"{await gsname(name, user_id)}, введи количество mDrops для выдачи (1к, 50к, 100к)\n\nБаланс казны: {format_balance(clan_data["coffres"])} mDrops")
 
     if int(clan_data["coffres"]) < int(amount):
         return await msg.answer(
@@ -2998,6 +3122,7 @@ async def handle_waiting_for_amount_to_give_from_coffer(msg: Message, state: FSM
 
     await msg.answer(f"{await gsname(name, user_id)}, введи ID получателя")
     await state.set_state(ClanStates.waiting_for_id_to_give_from_coffer)
+
 
 @dp.message(ClanStates.waiting_for_id_to_give_from_coffer)
 async def handle_waiting_for_amount_to_give_from_coffer(msg: Message, state: FSMContext):
@@ -3052,8 +3177,11 @@ async def handle_waiting_for_amount_to_give_from_coffer(msg: Message, state: FSM
     chat = await bot.get_chat(target_id)
     target_name = chat.first_name
 
-    await msg.answer(f"{await gsname(name, user_id)} ты успешно выдал {format_balance(amount)} mDrops игроку {await gsname(target_name)} ({html.code(target_id)})!")
-    append_log(f"{await gsname(name, user_id)} ({html.code(user_id)}) успешно выдал {format_balance(amount)} mDrops игроку {await gsname(target_name)} ({html.code(target_id)})!", add_timestamp=True)
+    await msg.answer(
+        f"{await gsname(name, user_id)} ты успешно выдал {format_balance(amount)} mDrops игроку {await gsname(target_name)} ({html.code(target_id)})!")
+    append_log(
+        f"{await gsname(name, user_id)} ({html.code(user_id)}) успешно выдал {format_balance(amount)} mDrops игроку {await gsname(target_name)} ({html.code(target_id)})!",
+        add_timestamp=True)
     try:
         await bot.send_message(target_id, f"Админ клана \"{clan_name}\" выдал вам {format_balance(amount)} mDrops!")
     except:
@@ -3076,8 +3204,10 @@ async def handle_clan_coffer(query: CallbackQuery, state: FSMContext):
     if not clan_name:
         return await query.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!")
 
-    await query.message.edit_text(f"{await gsname(name, user_id)}, введи на сколько mDrops ты хочешь пополнить казну (1к, 5к, 100к или все)")
+    await query.message.edit_text(
+        f"{await gsname(name, user_id)}, введи на сколько mDrops ты хочешь пополнить казну (1к, 5к, 100к или все)")
     await state.set_state(ClanStates.waiting_for_amount_to_add_coffer)
+
 
 @dp.message(ClanStates.waiting_for_amount_to_add_coffer)
 async def handle_waiting_for_amount_to_add_coffer(msg: Message, state: FSMContext):
@@ -3114,7 +3244,8 @@ async def handle_waiting_for_amount_to_add_coffer(msg: Message, state: FSMContex
                 return await msg.answer(f"{await gsname(name, user_id)}, минимальная сумма - 10 mDrops!",
                                         reply_markup=ckb(user_id))
         else:
-            return await msg.answer(f"{await gsname(name, user_id)}, введи нормальное число!", reply_markup=ckb(user_id))
+            return await msg.answer(f"{await gsname(name, user_id)}, введи нормальное число!",
+                                    reply_markup=ckb(user_id))
     except Exception:
         return await msg.answer(f"{await gsname(name, user_id)}, введи нормальное число!", reply_markup=ckb(user_id))
 
@@ -3122,8 +3253,9 @@ async def handle_waiting_for_amount_to_add_coffer(msg: Message, state: FSMContex
         return await msg.answer(f"{await gsname(name, user_id)}, минимальная сумма - 10 mDrops!",
                                 reply_markup=ckb(user_id))
 
+    await msg.answer(f"{PAY_TEXT}", reply_markup=get_buy_kb(user_id, f"clan_pay_coffres_add_wb:{amount}",
+                                                            f"clan_pay_coffres_add_wc:{amount}"))
 
-    await msg.answer(f"{PAY_TEXT}", reply_markup=get_buy_kb(user_id, f"clan_pay_coffres_add_wb:{amount}", f"clan_pay_coffres_add_wc:{amount}"))
 
 @dp.callback_query(F.data.startswith("clan_pay_coffres_add_wb:"))
 async def handle_add_mdrops_to_coffres_wb(qc: CallbackQuery, state: FSMContext):
@@ -3139,7 +3271,7 @@ async def handle_add_mdrops_to_coffres_wb(qc: CallbackQuery, state: FSMContext):
 
     if int(amount) > int(data["coins"]):
         return await qc.message.edit_text(f"{await gsname(name, user_id)}, тебе не хватает mDrops!",
-                                reply_markup=ckb(user_id))
+                                          reply_markup=ckb(user_id))
 
     clan_data = await load_clan(clan_name)
     clan_data["coffres"] += amount
@@ -3151,7 +3283,7 @@ async def handle_add_mdrops_to_coffres_wb(qc: CallbackQuery, state: FSMContext):
 
     kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="В клан", callback_data="clan_callback")]])
     await qc.message.edit_text(f"{await gsname(name, user_id)}, ты пополнил казну на {format_balance(amount)} mDrops",
-                     reply_markup=kb)
+                               reply_markup=kb)
 
 
 @dp.callback_query(F.data.startswith("clan_pay_coffres_add_wc:"))
@@ -3196,9 +3328,11 @@ async def show_clan_members(callback: CallbackQuery):
 
     clan_name = data.get("clan", None)
     if not clan_name:
-        kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")],
-                                                    [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
-        return await callback.message.edit_text(f"😕 {await gsname(caller_name, user_id)}, ты не состоишь в клане!", reply_markup=kb)
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=([[InlineKeyboardButton(text="🔥 Создать Клан", callback_data="create_clan")],
+                              [InlineKeyboardButton(text="🔍 Найти Клан", callback_data="find_clan")]]))
+        return await callback.message.edit_text(f"😕 {await gsname(caller_name, user_id)}, ты не состоишь в клане!",
+                                                reply_markup=kb)
 
     clan = await load_clan(clan_name)
     if clan is None:
@@ -3254,19 +3388,24 @@ async def show_clan_members(callback: CallbackQuery):
 
         row = []
         if caller_role in ("owner", "admin"):
-            row.append(InlineKeyboardButton(text=f"Выгнать {short_display}", callback_data=f"kick_member:{mid}:{clan_name}"))
+            row.append(
+                InlineKeyboardButton(text=f"Выгнать {short_display}", callback_data=f"kick_member:{mid}:{clan_name}"))
         if caller_role == "owner":
             if mid in admins:
-                row.append(InlineKeyboardButton(text=f"Снять админ {short_display}", callback_data=f"demote_admin:{mid}:{clan_name}"))
+                row.append(InlineKeyboardButton(text=f"Снять админ {short_display}",
+                                                callback_data=f"demote_admin:{mid}:{clan_name}"))
             else:
-                row.append(InlineKeyboardButton(text=f"Назначить админ {short_display}", callback_data=f"promote_admin:{mid}:{clan_name}"))
+                row.append(InlineKeyboardButton(text=f"Назначить админ {short_display}",
+                                                callback_data=f"promote_admin:{mid}:{clan_name}"))
 
         if row:
             kb.inline_keyboard.append(row)
 
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="clan_callback")])
 
-    await callback.message.edit_text(f"{await gsname(caller_name, user_id)}, все участники клана \"{clan_name}\":\n\n{members_text}", reply_markup=kb)
+    await callback.message.edit_text(
+        f"{await gsname(caller_name, user_id)}, все участники клана \"{clan_name}\":\n\n{members_text}",
+        reply_markup=kb)
 
 
 @dp.callback_query(F.data.startswith("kick_member:"))
@@ -3327,6 +3466,7 @@ async def handle_kick_member(callback: CallbackQuery):
     except Exception as e:
         await handle_error(callback.from_user.username, e, callback.from_user.id, 999)
 
+
 @dp.callback_query(F.data.startswith("promote_admin:"))
 async def handle_promote_admin(callback: CallbackQuery):
     try:
@@ -3369,6 +3509,7 @@ async def handle_promote_admin(callback: CallbackQuery):
     except Exception as e:
         await handle_error(callback.from_user.username, e, callback.from_user.id, 1000)
 
+
 @dp.callback_query(F.data.startswith("demote_admin:"))
 async def handle_demote_admin(callback: CallbackQuery):
     try:
@@ -3408,6 +3549,7 @@ async def handle_demote_admin(callback: CallbackQuery):
     except Exception as e:
         await handle_error(callback.from_user.username, e, callback.from_user.id, 1001)
 
+
 @dp.callback_query(F.data.startswith("leave_clan:"))
 async def handle_leave_clan(callback: CallbackQuery):
     try:
@@ -3427,7 +3569,8 @@ async def handle_leave_clan(callback: CallbackQuery):
         # Проверяем роль
         if caller_id == owner:
             # Владельцу нельзя просто так уйти — нужно передать права или распустить клан
-            await callback.answer("❌ Владелец не может покинуть клан. Передай права (не реализовано) или удали клан!", show_alert=True)
+            await callback.answer("❌ Владелец не может покинуть клан. Передай права (не реализовано) или удали клан!",
+                                  show_alert=True)
             return
 
         if caller_id not in members:
@@ -3491,6 +3634,7 @@ async def handle_leave_clan(callback: CallbackQuery):
         except Exception:
             pass
 
+
 @dp.callback_query(F.data == "find_clan")
 async def find_clan_callback(callback: CallbackQuery):
     user_id = str(callback.from_user.id)
@@ -3509,7 +3653,7 @@ async def find_clan_callback(callback: CallbackQuery):
     kb = InlineKeyboardMarkup(inline_keyboard=[])
 
     for clan in available_clans:
-        text += f"⚜️ {clan['name']} | Уровень {clan['level']} | {len(clan['members'])}/{clan['level']*5} мест\n"
+        text += f"⚜️ {clan['name']} | Уровень {clan['level']} | {len(clan['members'])}/{clan['level'] * 5} мест\n"
         kb.inline_keyboard.append([InlineKeyboardButton(
             text=f"Присоединиться к {clan['name']}",
             callback_data=f"join_clan:{clan['name']}"
@@ -3533,16 +3677,22 @@ async def handle_create_new_clan(callback: CallbackQuery):
     if clan_name:
         return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, ты уже состоишь в клане!")
 
-    kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="✅ Да, создать клан", callback_data="so_create_clan")], [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_clan_creation")]]))
+    kb = InlineKeyboardMarkup(inline_keyboard=(
+    [[InlineKeyboardButton(text="✅ Да, создать клан", callback_data="so_create_clan")],
+     [InlineKeyboardButton(text="❌ Отмена", callback_data="cancel_clan_creation")]]))
     if int(data["GGs"]) >= 150:
-        await callback.message.edit_text(f"💸 Цена создания клана: 150 GGs\n\n💎 Твой баланс: {data["GGs"]} GGs\n❓ Ты уверен что хочешь создать клан?", reply_markup=kb)
+        await callback.message.edit_text(
+            f"💸 Цена создания клана: 150 GGs\n\n💎 Твой баланс: {data["GGs"]} GGs\n❓ Ты уверен что хочешь создать клан?",
+            reply_markup=kb)
     else:
         await callback.message.edit_text(
             f"💸 {await gsname(name, user_id)}, цена создания клана: 150 GGs\n\n💎 Твой баланс: {data["GGs"]} GGs\n❌ Тебе не хватает {abs(150 - int(data["GGs"]))} GGs чтобы создать клан!")
 
+
 @dp.callback_query(F.data == "cancel_clan_creation")
 async def handle_cancel_clan_creation(callback: CallbackQuery):
     await callback.message.edit_text("❌ Создание клана отменено!")
+
 
 @dp.callback_query(F.data == "so_create_clan")
 async def handle_clan_creation(callback: CallbackQuery, state: FSMContext):
@@ -3562,9 +3712,10 @@ async def handle_clan_creation(callback: CallbackQuery, state: FSMContext):
         await callback.message.edit_text(
             f"💸 {await gsname(name, user_id)}, цена создания клана: 150 GGs\n\n💎 Твой баланс: {data["GGs"]} GGs\n❌ Тебе не хватает {abs(150 - int(data["GGs"]))} GGs чтобы создать клан!")
 
-
-    await callback.message.edit_text(f"{await gsname(name, user_id)}, введи название клана\n\n1. Оно не может содержать емодзи\n2. Длинна должна составлять не более 20 символов")
+    await callback.message.edit_text(
+        f"{await gsname(name, user_id)}, введи название клана\n\n1. Оно не может содержать емодзи\n2. Длинна должна составлять не более 20 символов")
     await state.set_state(ClanStates.waiting_for_name)
+
 
 @dp.message(ClanStates.waiting_for_name)
 async def handle_create_clan_name(message: Message, state: FSMContext):
@@ -3592,7 +3743,8 @@ async def handle_create_clan_name(message: Message, state: FSMContext):
             f"💸 {await gsname(name, user_id)}, цена создания клана: 150 GGs\n\n💎 Твой баланс: {data["GGs"]} GGs\n❌ Тебе не хватает {abs(150 - int(data["GGs"]))} GGs чтобы создать клан!")
 
     if len(clan_name) > 20:
-        return await message.reply(f"❌ {await gsname(name, user_id)}, название клана должна составлять не более 20 символов")
+        return await message.reply(
+            f"❌ {await gsname(name, user_id)}, название клана должна составлять не более 20 символов")
     elif contains_emoji(clan_name):
         return await message.reply(f"❌ {await gsname(name, user_id)}, название клана не должно содержать емодзи")
 
@@ -3601,6 +3753,7 @@ async def handle_create_clan_name(message: Message, state: FSMContext):
     await save_data(user_id, data)
     await state.clear()
     return await message.reply(f"🔥 {await gsname(name, user_id)}, ты успешно создал клан \"{clan_name}\"")
+
 
 @dp.callback_query(F.data.startswith("join_clan:"))
 async def handle_join_clan(callback: CallbackQuery):
@@ -3620,6 +3773,7 @@ async def handle_join_clan(callback: CallbackQuery):
         await callback.message.answer(f"📨 Заявка в клан \"{clan_name}\" отправлена!")
     else:
         await callback.message.answer("❌ У тебя уже есть активная заявка!")
+
 
 @dp.callback_query(F.data == "clan_requests")
 async def handle_clan_requests(callback: CallbackQuery):
@@ -3672,6 +3826,7 @@ async def handle_clan_requests(callback: CallbackQuery):
 
     await callback.message.edit_text(f"Заявки в клан \"{clan_name}\":", reply_markup=kb)
 
+
 @dp.callback_query(F.data.startswith("accept_request:"))
 async def handle_accept_request(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -3685,7 +3840,6 @@ async def handle_accept_request(callback: CallbackQuery):
 
     if target_data.get("clan", None):
         return await callback.answer("Этот игрок уже состоит в клане!")
-
 
     # Додаємо користувача у клан
     clan["members"].append(target_id)
@@ -3780,7 +3934,10 @@ async def handle_clan_buy_rating(callback: CallbackQuery):
         )
     ])
 
-    await callback.message.edit_text(f"🏆 {await gsname(name, user_id)}, ты в меню покупки рейтинга!\n\n💸 Курс: 1 🏆 = 1 GGs\n🏆 Рейтинг клана сейчас: {cland["rating"]}\n💎 Твой баланс: {ggs} GGs\n❓ Сколько ты хочешь купить?", reply_markup=kb)
+    await callback.message.edit_text(
+        f"🏆 {await gsname(name, user_id)}, ты в меню покупки рейтинга!\n\n💸 Курс: 1 🏆 = 1 GGs\n🏆 Рейтинг клана сейчас: {cland["rating"]}\n💎 Твой баланс: {ggs} GGs\n❓ Сколько ты хочешь купить?",
+        reply_markup=kb)
+
 
 @dp.callback_query(F.data.startswith("buy_clan_rating:"))
 async def handle_reject_request(callback: CallbackQuery, state: FSMContext):
@@ -3795,22 +3952,28 @@ async def handle_reject_request(callback: CallbackQuery, state: FSMContext):
 
     clan_name = data.get("clan", None)
 
-    back_button = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="Назад", callback_data="clan_callback")]]))
+    back_button = InlineKeyboardMarkup(
+        inline_keyboard=([[InlineKeyboardButton(text="Назад", callback_data="clan_callback")]]))
     cancel = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="Отмена", callback_data="cancel")]]))
 
     if not clan_name:
-        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!", reply_markup=back_button)
+        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, ты не состоишь в клане!",
+                                                reply_markup=back_button)
 
     clan = await load_clan(clan_name)
     if int(data["GGs"]) < 1:
-        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, у тебя нету GGs!", reply_markup=back_button)
+        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, у тебя нету GGs!",
+                                                reply_markup=back_button)
 
     if str(amount) == "own":
-        await callback.message.edit_text(f"🏆 {await gsname(name, user_id)}, введи количетсво рейтинга которое ты хочешь купить:", reply_markup=cancel)
+        await callback.message.edit_text(
+            f"🏆 {await gsname(name, user_id)}, введи количетсво рейтинга которое ты хочешь купить:",
+            reply_markup=cancel)
         return await state.set_state(ClanStates.waiting_for_anount_rating_buy)
 
     if int(amount) > int(data["GGs"]):
-        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, у тебя не хватает GGs!", reply_markup=back_button)
+        return await callback.message.edit_text(f"😕 {await gsname(name, user_id)}, у тебя не хватает GGs!",
+                                                reply_markup=back_button)
 
     data["GGs"] -= int(amount)
     await save_data(user_id, data)
@@ -3818,7 +3981,9 @@ async def handle_reject_request(callback: CallbackQuery, state: FSMContext):
     clan["rating"] += int(amount)
     await save_clan(clan_name, clan)
 
-    await callback.message.edit_text(f"🏆 {await gsname(name, user_id)}, ты пополнил рейтинг клана на {amount}!", reply_markup=back_button)
+    await callback.message.edit_text(f"🏆 {await gsname(name, user_id)}, ты пополнил рейтинг клана на {amount}!",
+                                     reply_markup=back_button)
+
 
 @dp.message(ClanStates.waiting_for_anount_rating_buy)
 async def handle_buy_rating_own(message: Message, state: FSMContext):
@@ -3850,8 +4015,10 @@ async def handle_buy_rating_own(message: Message, state: FSMContext):
         await save_clan(str(clan_name), clan)
         back_button = InlineKeyboardMarkup(
             inline_keyboard=([[InlineKeyboardButton(text="Назад", callback_data="clan_callback")]]))
-        await message.answer(f"🏆 {await gsname(name, user_id)}, ты успешно пополнил рейтинг клана на {amount}!", reply_markup=back_button)
+        await message.answer(f"🏆 {await gsname(name, user_id)}, ты успешно пополнил рейтинг клана на {amount}!",
+                             reply_markup=back_button)
         await state.clear()
+
 
 def _safe_load_list(s):
     try:
@@ -3862,6 +4029,7 @@ def _safe_load_list(s):
     except Exception:
         return []
     return []
+
 
 @dp.callback_query(F.data.startswith("top_clans:"))
 async def callback_top_clans(query: CallbackQuery):
@@ -3943,6 +4111,7 @@ async def callback_top_clans(query: CallbackQuery):
         except Exception:
             pass
 
+
 @dp.callback_query(F.data == "cancel")
 async def handle_cancel(callback: CallbackQuery, state: FSMContext):
     await state.clear()
@@ -3952,15 +4121,16 @@ async def handle_cancel(callback: CallbackQuery, state: FSMContext):
 # -------------- CASES -------------- #
 
 CASES = {
-    "bronze":   {"emoji": "🟢", "price": 1000,    "name": "Бронзовый кейс"},
-    "silver":   {"emoji": "🔵", "price": 5000,    "name": "Серебряный кейс"},
-    "gold":     {"emoji": "🟣", "price": 20000,   "name": "Золотой кейс"},
-    "platinum": {"emoji": "⚪", "price": 50000,   "name": "Платиновый кейс"},
-    "diamond":  {"emoji": "💎", "price": 100000,  "name": "Алмазный кейс"},
-    "emerald":  {"emoji": "🟩", "price": 200000,  "name": "Изумрудный кейс"},
-    "ruby":     {"emoji": "🔴", "price": 500000,  "name": "Рубиновый кейс"},
-    "aquamaine":{"emoji": "💠", "price": 1000000,  "name": "Аквамариновый кейс"},
+    "bronze": {"emoji": "🟢", "price": 1000, "name": "Бронзовый кейс"},
+    "silver": {"emoji": "🔵", "price": 5000, "name": "Серебряный кейс"},
+    "gold": {"emoji": "🟣", "price": 20000, "name": "Золотой кейс"},
+    "platinum": {"emoji": "⚪", "price": 50000, "name": "Платиновый кейс"},
+    "diamond": {"emoji": "💎", "price": 100000, "name": "Алмазный кейс"},
+    "emerald": {"emoji": "🟩", "price": 200000, "name": "Изумрудный кейс"},
+    "ruby": {"emoji": "🔴", "price": 500000, "name": "Рубиновый кейс"},
+    "aquamaine": {"emoji": "💠", "price": 1000000, "name": "Аквамариновый кейс"},
 }
+
 
 @dp.message(F.text.lower().in_(["/cases", "кейсы", "кейс", "/case", "/cases@gmegadbot", "/case@gmegadbot"]))
 async def case_menu(message: Message):
@@ -3972,9 +4142,11 @@ async def case_menu(message: Message):
                 callback_data=f"buy_case:{key}:{message.from_user.id}"
             ))
         kb.row(InlineKeyboardButton(text="📂 Мои кейсы", callback_data=f"my_cases:{message.from_user.id}"))
-        await message.reply("🎁 Добро пожаловать в магазин кейсов! Выберите кейс для покупки:", reply_markup=kb.as_markup())
+        await message.reply("🎁 Добро пожаловать в магазин кейсов! Выберите кейс для покупки:",
+                            reply_markup=kb.as_markup())
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 110)
+
 
 @dp.callback_query(F.data.startswith("case_back"))
 @flood_protect(min_delay=0.5)
@@ -3991,9 +4163,11 @@ async def case_back(callback: CallbackQuery):
                 callback_data=f"buy_case:{key}:{callback.from_user.id}"
             ))
         kb.row(InlineKeyboardButton(text="📂 Мои кейсы", callback_data=f"my_cases:{callback.from_user.id}"))
-        await callback.message.edit_text("🎁 Добро пожаловать в магазин кейсов! Выберите кейс для покупки:", reply_markup=kb.as_markup())
+        await callback.message.edit_text("🎁 Добро пожаловать в магазин кейсов! Выберите кейс для покупки:",
+                                         reply_markup=kb.as_markup())
     except Exception as e:
         await handle_error(callback.from_user.username, e, callback.from_user.id, 110)
+
 
 @dp.callback_query(F.data.startswith("buy_case:"))
 @flood_protect(min_delay=0.5)
@@ -4009,9 +4183,12 @@ async def buy_case(callback: CallbackQuery):
 
         case_key = callback.data.split(":")[1]
 
-        await callback.message.edit_text(f"{PAY_TEXT}", reply_markup=get_buy_kb(int(user_id), f"bcwb:{case_key}:{user_id}", f"bcwc:{case_key}:{user_id}"))
+        await callback.message.edit_text(f"{PAY_TEXT}",
+                                         reply_markup=get_buy_kb(int(user_id), f"bcwb:{case_key}:{user_id}",
+                                                                 f"bcwc:{case_key}:{user_id}"))
     except Exception as e:
         await handle_error(callback.from_user.username, e, callback.from_user.id, 112)
+
 
 @dp.callback_query(F.data.startswith("bcwc:"))
 async def buy_case_wc(qc: CallbackQuery):
@@ -4056,7 +4233,8 @@ async def buy_case_wb(qc: CallbackQuery):
         data = await load_data(user_id)
 
     if data["coins"] < case["price"]:
-        return await qc.message.edit_text("❌ Недостаточно средств!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data=f"case_back:{user_id}")]]))
+        return await qc.message.edit_text("❌ Недостаточно средств!", reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data=f"case_back:{user_id}")]]))
 
     # списание средств и добавление кейса
     data["coins"] -= case["price"]
@@ -4140,6 +4318,7 @@ async def open_case(callback: CallbackQuery):
     except Exception as e:
         await handle_error(callback.from_user.username, e, callback.from_user.id, 114)
 
+
 async def show_case_grid(message: Message, user_id: str):
     data = await load_data(user_id)
     case_data = data.get("current_case", {})
@@ -4157,6 +4336,7 @@ async def show_case_grid(message: Message, user_id: str):
         kb.row(*buttons[i:i + 3])
 
     await message.edit_text("🎮 Нажмите на 3 ячейки, чтобы открыть их:", reply_markup=kb.as_markup())
+
 
 @dp.callback_query(F.data.startswith("case_click:"))
 @flood_protect(min_delay=0.5)
@@ -4205,14 +4385,15 @@ async def case_click(callback: CallbackQuery):
     except Exception as e:
         await handle_error(callback.from_user.username, e, callback.from_user.id, 115)
 
+
 # -------------- EXCHANGE -------------- #
 
-TRADE_WINDOW_SECONDS = 60        # вікно (сек) для rate-limit
-MAX_TRADES_PER_WINDOW = 5        # макс угод в цьому вікні для одного юзера
-TRADE_COOLDOWN_SECONDS = 2       # мінімум секунд між окремими угодами (додатково)
-CONFIRM_EXPIRE_SECONDS = 120     # скільки дійсна кнопка підтвердження
-CONFIRM_THRESHOLD_GGS = 10.0     # якщо кількість GGs >= цього - потрібне підтвердження
-CONFIRM_THRESHOLD_MCOINS = 50000 # якщо сума mDrops >= цього - потрібне підтвердження
+TRADE_WINDOW_SECONDS = 60  # вікно (сек) для rate-limit
+MAX_TRADES_PER_WINDOW = 5  # макс угод в цьому вікні для одного юзера
+TRADE_COOLDOWN_SECONDS = 2  # мінімум секунд між окремими угодами (додатково)
+CONFIRM_EXPIRE_SECONDS = 120  # скільки дійсна кнопка підтвердження
+CONFIRM_THRESHOLD_GGS = 10.0  # якщо кількість GGs >= цього - потрібне підтвердження
+CONFIRM_THRESHOLD_MCOINS = 50000  # якщо сума mDrops >= цього - потрібне підтвердження
 
 
 def init_trade_protection_db():
@@ -4238,6 +4419,7 @@ def init_trade_protection_db():
         """)
         conn.commit()
 
+
 # Викликай при ініціалізації бота
 init_trade_protection_db()
 
@@ -4246,6 +4428,7 @@ class ExchangeForm(StatesGroup):
     waiting_price = State()
     waiting_amount = State()
     waiting_deal_amount = State()
+
 
 def init_exchange_db():
     with sqlite3.connect(DB_PATH) as conn:
@@ -4261,7 +4444,10 @@ def init_exchange_db():
             )
         """)
         conn.commit()
+
+
 init_exchange_db()
+
 
 def can_start_trade(uid: str):
     """Повертає (can: bool, reason: str_or_None)."""
@@ -4287,6 +4473,7 @@ def can_start_trade(uid: str):
         # вікно/лічильник скидається
         return True, None
 
+
 def record_trade(uid: str):
     """Запис успішної угоди — збільшує лічильник/оновлює last_trade_ts."""
     now = time.time()
@@ -4305,6 +4492,7 @@ def record_trade(uid: str):
         # нове вікно
         _save_trade_activity(uid, now, 1, now)
 
+
 def create_trade_confirmation(uid: str, order_id: int, amount: float):
     token = uuid.uuid4().hex
     now = time.time()
@@ -4318,10 +4506,12 @@ def create_trade_confirmation(uid: str, order_id: int, amount: float):
         conn.commit()
     return token
 
+
 def get_trade_confirmation(token: str):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT token, uid, order_id, amount, created_at, expires_at FROM trade_confirms WHERE token = ?", (token,))
+        cursor.execute(
+            "SELECT token, uid, order_id, amount, created_at, expires_at FROM trade_confirms WHERE token = ?", (token,))
         row = cursor.fetchone()
         if not row:
             return None
@@ -4329,6 +4519,7 @@ def get_trade_confirmation(token: str):
             "token": row[0], "uid": row[1], "order_id": row[2],
             "amount": row[3], "created_at": row[4], "expires_at": row[5]
         }
+
 
 def delete_trade_confirmation(token: str):
     with sqlite3.connect(DB_PATH) as conn:
@@ -4346,6 +4537,7 @@ def _get_trade_activity(uid: str):
             return {"window_start": row[0], "trades_count": row[1], "last_trade_ts": row[2]}
         return None
 
+
 def _save_trade_activity(uid: str, window_start: float, trades_count: int, last_trade_ts: float):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -4356,6 +4548,7 @@ def _save_trade_activity(uid: str, window_start: float, trades_count: int, last_
         """, (uid, window_start, trades_count, last_trade_ts))
         conn.commit()
 
+
 def get_exchange_menu(user_first_name: str):
     kb = InlineKeyboardMarkup(inline_keyboard=[])
     kb.inline_keyboard.append([InlineKeyboardButton(text="💸 Купить", callback_data="exchange_buy")])
@@ -4363,17 +4556,22 @@ def get_exchange_menu(user_first_name: str):
     kb.inline_keyboard.append([InlineKeyboardButton(text="📝 Управление курсом", callback_data="exchange_rates_menu")])
     return kb
 
+
 def get_exchange_rates_menu():
     kb = InlineKeyboardMarkup(inline_keyboard=[])
-    kb.inline_keyboard.append([InlineKeyboardButton(text="✍ Изменить курс покупки", callback_data="exchange_setprice:buy")])
-    kb.inline_keyboard.append([InlineKeyboardButton(text="✍ Изменить курс продажи", callback_data="exchange_setprice:sell")])
+    kb.inline_keyboard.append(
+        [InlineKeyboardButton(text="✍ Изменить курс покупки", callback_data="exchange_setprice:buy")])
+    kb.inline_keyboard.append(
+        [InlineKeyboardButton(text="✍ Изменить курс продажи", callback_data="exchange_setprice:sell")])
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="exchange_menu")])
     return kb
+
 
 def get_back_kb():
     kb = InlineKeyboardMarkup(inline_keyboard=[])
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="exchange_menu")])
     return kb
+
 
 def amount_quick_kb_for_create(order_type: str, user_data: dict, price: float):
     kb = InlineKeyboardMarkup(inline_keyboard=[])
@@ -4401,6 +4599,7 @@ def amount_quick_kb_for_create(order_type: str, user_data: dict, price: float):
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="exchange_menu")])
     return kb
 
+
 def deal_amount_kb(order_id: int, max_amount: float):
     kb = InlineKeyboardMarkup(inline_keyboard=[])
     quick = []
@@ -4412,6 +4611,7 @@ def deal_amount_kb(order_id: int, max_amount: float):
     kb.inline_keyboard.append([InlineKeyboardButton(text="✏ Ввести вручную", callback_data=f"deal_manual:{order_id}")])
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="exchange_menu")])
     return kb
+
 
 def get_orders(order_type: str, limit: int = 9, offset: int = 0):
     with sqlite3.connect(DB_PATH) as conn:
@@ -4432,11 +4632,13 @@ def get_orders(order_type: str, limit: int = 9, offset: int = 0):
             """, (order_type, limit, offset))
         return cursor.fetchall()
 
+
 def get_order_by_id(order_id: int):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT id, user_id, order_type, price, amount FROM exchange_orders WHERE id = ?", (order_id,))
         return cursor.fetchone()
+
 
 def update_order_amount(order_id: int, new_amount: float):
     with sqlite3.connect(DB_PATH) as conn:
@@ -4447,6 +4649,7 @@ def update_order_amount(order_id: int, new_amount: float):
             cursor.execute("UPDATE exchange_orders SET amount = ? WHERE id = ?", (new_amount, order_id))
         conn.commit()
 
+
 def save_order(user_id: str, order_type: str, price: float, amount: float):
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
@@ -4456,6 +4659,7 @@ def save_order(user_id: str, order_type: str, price: float, amount: float):
         )
         conn.commit()
         return cursor.lastrowid
+
 
 def user_orders_summary(user_id: str):
     with sqlite3.connect(DB_PATH) as conn:
@@ -4482,12 +4686,14 @@ async def _get_display_name(bot, user_id: str) -> str:
         pass
     return f"User_{str(user_id)[-4:]}"
 
+
 def my_orders_kb(orders):
     kb = InlineKeyboardMarkup(inline_keyboard=[])
     for oid, otype, price, amount in orders:
         kb.inline_keyboard.append([InlineKeyboardButton(text=f"Управлять {oid}", callback_data=f"manage_order:{oid}")])
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="exchange_menu")])
     return kb
+
 
 @dp.callback_query(F.data.startswith("manage_order:"))
 @flood_protect(min_delay=0.5)
@@ -4506,7 +4712,8 @@ async def manage_order_cb(query: types.CallbackQuery, state: FSMContext):
         await query.answer("Это не ваша заявка.", show_alert=True)
         return
     owner_name = await _get_display_name(query.bot, owner_id)
-    header = (f"📝 Управление заявкой ID: {oid}\n\n👤 {owner_name}\nТип: {'Покупка' if order_type.upper() == 'BUY' else 'Продажа'}\nКурс: {format_balance(price)} mDrops / 1 GGs\nОсталось: {format_balance(amount)} GGs")
+    header = (
+        f"📝 Управление заявкой ID: {oid}\n\n👤 {owner_name}\nТип: {'Покупка' if order_type.upper() == 'BUY' else 'Продажа'}\nКурс: {format_balance(price)} mDrops / 1 GGs\nОсталось: {format_balance(amount)} GGs")
     kb = InlineKeyboardMarkup(inline_keyboard=[])
     kb.inline_keyboard.append([InlineKeyboardButton(text="❌ Отменить и вернуть", callback_data=f"cancel_order:{oid}")])
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="exchange_rates_menu")])
@@ -4515,6 +4722,7 @@ async def manage_order_cb(query: types.CallbackQuery, state: FSMContext):
     except Exception:
         await query.message.answer(header, reply_markup=kb)
     await query.answer()
+
 
 @dp.callback_query(F.data.startswith("cancel_order:"))
 @flood_protect(min_delay=0.5)
@@ -4566,12 +4774,15 @@ async def cancel_order_cb(query: types.CallbackQuery):
         await query.message.answer(text, reply_markup=get_back_kb())
     await query.answer()
 
+
 @dp.message(F.text.lower().in_(["/exchange", "exchange", "обменник"]))
 async def exchange_menu(message: types.Message):
     if getattr(message.chat, "type", None) != "private":
-        kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="🍓 Перейти в ЛС", url="t.me/gmegadbot")]]))
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=([[InlineKeyboardButton(text="🍓 Перейти в ЛС", url="t.me/gmegadbot")]]))
         return await message.reply(
-            f"🍓 Обменник доступен только в {html.link("ЛС с ботом", "t.me/gmegadbot")}!", reply_markup=kb, disable_web_page_preview=True
+            f"🍓 Обменник доступен только в {html.link("ЛС с ботом", "t.me/gmegadbot")}!", reply_markup=kb,
+            disable_web_page_preview=True
         )
 
     if not await load_data(str(message.from_user.id)):
@@ -4581,6 +4792,7 @@ async def exchange_menu(message: types.Message):
         f"💱 P2P ОБМЕННИК\n\nℹ Здесь ты можешь купить и продать GGs.\n👇 {await gsname(message.from_user.first_name, message.from_user.id)}, что ты хочешь?",
         reply_markup=get_exchange_menu(message.from_user.first_name)
     )
+
 
 @dp.callback_query(F.data == "exchange_menu")
 async def exchange_menu_callback(query: types.CallbackQuery):
@@ -4596,6 +4808,7 @@ async def exchange_menu_callback(query: types.CallbackQuery):
         )
     await query.answer()
 
+
 @dp.callback_query(F.data == "exchange_rates_menu")
 @flood_protect(min_delay=0.5)
 async def exchange_rates_menu(query: types.CallbackQuery):
@@ -4604,7 +4817,8 @@ async def exchange_rates_menu(query: types.CallbackQuery):
     lines = ["📝 Управление курсом\n\nВаши активные заявки:"]
     if orders:
         for oid, otype, price, amount in orders:
-            lines.append(f"🔸 ID: {oid} | {'Покупка' if otype.upper() == 'BUY' else 'Продажа'} | {format_balance(amount)} GGs @ {format_balance(price)} mDrops")
+            lines.append(
+                f"🔸 ID: {oid} | {'Покупка' if otype.upper() == 'BUY' else 'Продажа'} | {format_balance(amount)} GGs @ {format_balance(price)} mDrops")
         text = "\n".join(lines)
         try:
             await query.message.edit_text(text, reply_markup=my_orders_kb(orders))
@@ -4618,6 +4832,7 @@ async def exchange_rates_menu(query: types.CallbackQuery):
         except Exception:
             await query.message.answer(text, reply_markup=get_exchange_rates_menu())
     await query.answer()
+
 
 @dp.callback_query(F.data.startswith("exchange_setprice:"))
 @flood_protect(min_delay=0.5)
@@ -4640,6 +4855,7 @@ async def set_price(query: types.CallbackQuery, state: FSMContext):
         await query.message.answer(text)
     await query.answer()
 
+
 @dp.message(ExchangeForm.waiting_price, F.text.regexp(r"^\d+(\.\d+)?$"))
 async def set_price_value(message: types.Message, state: FSMContext):
     price = float(message.text)
@@ -4650,9 +4866,12 @@ async def set_price_value(message: types.Message, state: FSMContext):
     uid = str(message.from_user.id)
     user_data = await load_data(uid) or {}
     if order_type == "buy":
-        await message.answer("✍ Выберите, сколько mDrops вы хотите вложить (быстро-кнопки) или введите вручную:", reply_markup=amount_quick_kb_for_create("buy", user_data, price))
+        await message.answer("✍ Выберите, сколько mDrops вы хотите вложить (быстро-кнопки) или введите вручную:",
+                             reply_markup=amount_quick_kb_for_create("buy", user_data, price))
     else:
-        await message.answer("✍ Выберите, сколько GGs выставить на продажу (быстро-кнопки) или введите вручную:", reply_markup=amount_quick_kb_for_create("sell", user_data, price))
+        await message.answer("✍ Выберите, сколько GGs выставить на продажу (быстро-кнопки) или введите вручную:",
+                             reply_markup=amount_quick_kb_for_create("sell", user_data, price))
+
 
 @dp.callback_query(F.data.startswith("fill_amount:"))
 @flood_protect(min_delay=0.5)
@@ -4739,13 +4958,18 @@ async def fill_amount_callback(query: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await query.answer()
 
+
 @dp.callback_query(F.data == "manual_amount")
 async def manual_amount_cb(query: types.CallbackQuery):
     try:
-        await query.message.edit_text("✏ Введи число:\n(для BUY — сумма в mDrops для депозита; для SELL — количество GGs):", reply_markup=get_back_kb())
+        await query.message.edit_text(
+            "✏ Введи число:\n(для BUY — сумма в mDrops для депозита; для SELL — количество GGs):",
+            reply_markup=get_back_kb())
     except Exception:
-        await query.message.answer("✏ Введи число:\n(для BUY — сумма в mDrops для депозита; для SELL — количество GGs):")
+        await query.message.answer(
+            "✏ Введи число:\n(для BUY — сумма в mDrops для депозита; для SELL — количество GGs):")
     await query.answer()
+
 
 @dp.message(ExchangeForm.waiting_amount, F.text.regexp(r"^\d+(\.\d+)?$"))
 async def set_amount_value(message: types.Message, state: FSMContext):
@@ -4800,6 +5024,7 @@ async def set_amount_value(message: types.Message, state: FSMContext):
 
     await state.clear()
 
+
 @dp.callback_query(F.data == "exchange_buy")
 @flood_protect(min_delay=0.5)
 async def market_buy(query: types.CallbackQuery):
@@ -4828,6 +5053,7 @@ async def market_buy(query: types.CallbackQuery):
         await query.message.answer(text, reply_markup=kb)
     await query.answer()
 
+
 @dp.callback_query(F.data == "exchange_sell")
 @flood_protect(min_delay=0.5)
 async def market_sell(query: types.CallbackQuery):
@@ -4840,14 +5066,15 @@ async def market_sell(query: types.CallbackQuery):
         await query.answer()
         return
 
-    lines = ["📊 <b>Заявки на покупку GGs</b>\n", f"{gline()}\n", f"{html.blockquote(html.italic("ℹ️ GGs можно купить только у других игроков. Выгодное предложение всегда размещается сверху."))}"]
+    lines = ["📊 <b>Заявки на покупку GGs</b>\n", f"{gline()}\n",
+             f"{html.blockquote(html.italic("ℹ️ GGs можно купить только у других игроков. Выгодное предложение всегда размещается сверху."))}"]
     kb = InlineKeyboardMarkup(inline_keyboard=[])
     for oid, uid, price, amount in orders:
         name = await _get_display_name(query.bot, uid)
         reserved = price * amount
         btn_text = f"{name} • {int(price)} mDrops"
         kb.inline_keyboard.append([InlineKeyboardButton(text=btn_text, callback_data=f"deal:{oid}")])
-        #lines.append(f"🔹 ID: {oid} | 👤 Продавец: {name} | 💰 Запрос: {amount} GGs | 💸 Курс: {price} mDrops = 1 GG | ❇️ Доступно: {format_balance(reserved)} mDrops)")
+        # lines.append(f"🔹 ID: {oid} | 👤 Продавец: {name} | 💰 Запрос: {amount} GGs | 💸 Курс: {price} mDrops = 1 GG | ❇️ Доступно: {format_balance(reserved)} mDrops)")
     kb.inline_keyboard.append([InlineKeyboardButton(text="Назад", callback_data="exchange_menu")])
     text = "\n".join(lines)
     try:
@@ -4855,6 +5082,7 @@ async def market_sell(query: types.CallbackQuery):
     except Exception:
         await query.message.answer(text, reply_markup=kb)
     await query.answer()
+
 
 @dp.callback_query(F.data.startswith("deal:"))
 @flood_protect(min_delay=0.5)
@@ -4876,7 +5104,8 @@ async def deal_order_prompt(query: types.CallbackQuery, state: FSMContext):
         header = (f"👤 {owner_name}\n💸 Курс: {int(price)} mDrops = 1 GGs\n📦 Доступно: {int(reserved_GGs)} GGs")
     else:
         reserved_coins = price * amount
-        header = (f"👤 {owner_name}\n💰 Пополнено: {format_balance(reserved_coins)} mDrops\n📦 Готов купить: {int(amount)} GGs")
+        header = (
+            f"👤 {owner_name}\n💰 Пополнено: {format_balance(reserved_coins)} mDrops\n📦 Готов купить: {int(amount)} GGs")
 
     text = (f"\n🚀 КУПИТЬ GGs\n{html.code(gline())}\n{header}\n"
             f"{html.code(gline())}\n"
@@ -4888,6 +5117,7 @@ async def deal_order_prompt(query: types.CallbackQuery, state: FSMContext):
     await state.update_data(deal_order_id=oid)
     await state.set_state(ExchangeForm.waiting_deal_amount)
     await query.answer()
+
 
 @dp.callback_query(F.data.startswith("deal_fill:"))
 @flood_protect(min_delay=0.5)
@@ -4953,7 +5183,8 @@ async def deal_fill_callback(query: types.CallbackQuery, state: FSMContext):
             return
 
         total_cost = float(price) * take_amount
-        require_confirm = (take_amount >= CONFIRM_THRESHOLD_GGS or total_cost >= CONFIRM_THRESHOLD_MCOINS) if 'CONFIRM_THRESHOLD_GGS' in globals() else False
+        require_confirm = (
+                    take_amount >= CONFIRM_THRESHOLD_GGS or total_cost >= CONFIRM_THRESHOLD_MCOINS) if 'CONFIRM_THRESHOLD_GGS' in globals() else False
 
     # дополнительные проверки
     if take_amount > float(amount_available) + 1e-9:
@@ -4991,6 +5222,7 @@ async def deal_fill_callback(query: types.CallbackQuery, state: FSMContext):
     except Exception as e:
         await query.answer("Ошибка при выполнении сделки.", show_alert=True)
         await send_log(f"execute_trade error: {e}")
+
 
 @dp.callback_query(F.data.startswith("deal_manual:"))
 @flood_protect(min_delay=0.5)
@@ -5058,7 +5290,8 @@ async def deal_manual_amount_entered(message: types.Message, state: FSMContext):
         return
 
     total_cost = float(price) * take_amount
-    require_confirm = (take_amount >= CONFIRM_THRESHOLD_GGS or total_cost >= CONFIRM_THRESHOLD_MCOINS) if 'CONFIRM_THRESHOLD_GGS' in globals() else False
+    require_confirm = (
+                take_amount >= CONFIRM_THRESHOLD_GGS or total_cost >= CONFIRM_THRESHOLD_MCOINS) if 'CONFIRM_THRESHOLD_GGS' in globals() else False
 
     if require_confirm and 'create_trade_confirmation' in globals():
         token = create_trade_confirmation(taker_id, oid, take_amount)
@@ -5080,7 +5313,9 @@ async def deal_manual_amount_entered(message: types.Message, state: FSMContext):
         return
 
     # Нет подтверждения — вызываем execute_trade
-    class Q: pass
+    class Q:
+        pass
+
     q = Q()
     q.message = message
     q.bot = message.bot
@@ -5094,6 +5329,7 @@ async def deal_manual_amount_entered(message: types.Message, state: FSMContext):
         await message.answer("Ошибка при выполнении сделки.")
         print("execute_trade error:", e)
     await state.clear()
+
 
 @dp.callback_query(F.data.startswith("deal_confirm:"))
 @flood_protect(min_delay=0.5)
@@ -5157,6 +5393,7 @@ async def deal_confirm_cb(query: types.CallbackQuery, state: FSMContext):
     except Exception as e:
         await query.answer("Ошибка при выполнении сделки.", show_alert=True)
         print("execute_trade error:", e)
+
 
 async def execute_trade(event, state: FSMContext, order_id: int, take_amount: float):
     # message / user extraction
@@ -5237,7 +5474,7 @@ async def execute_trade(event, state: FSMContext, order_id: int, take_amount: fl
     elif order_type == "buy":
         # order owner = покупець (вони вже мали locked_coins)
         buyer_id_reserved = str(owner_id)  # той, хто створив BUY заявку (резервував coins)
-        seller_id = taker_id               # теперішній користувач — продавець
+        seller_id = taker_id  # теперішній користувач — продавець
 
         seller_data = await load_data(seller_id) or {}
         buyer_data = await load_data(buyer_id_reserved) or {}
@@ -5277,6 +5514,8 @@ async def execute_trade(event, state: FSMContext, order_id: int, take_amount: fl
     else:
         await safe_answer("Неподдерживаемый тип заявки.", show_alert=True)
         await state.clear()
+
+
 # -------------- GAMES -------------- #
 
 @dp.callback_query(F.data.startswith("games_page3:"))
@@ -5287,17 +5526,18 @@ async def games_second_page(query: CallbackQuery):
     if int(uid) != int(caller_id):
         return query.answer("Это не твоя кнопка!")
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="◀️ Страница 2", callback_data=f"games_page2:{uid}")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="◀️ Страница 2", callback_data=f"games_page2:{uid}")]])
     await query.message.edit_text(
-                        f"🎮 {html.italic(await gsname(query.from_user.first_name, query.from_user.id))}, список игр (страница 3):\n{gline()}\n"
-                        f" • 🛕 {html.bold('Башня')}. Пример: башня 1к\n"
-                        f"<i>9 уровней, множитель в конце - х7.1</i>\n\n"
-                        f" • 📦 {html.bold('Сундуки')}. Пример: сундуки 1к\n"
-                        f"<i>4 варианта и 1 верный</i>\n\n"
-                        f" • 🪙 {html.bold('Монетка')}. Пример: монетка 10к\n"
-                        f"<i>Орел или решка?</i>\n\n"
-                        f" • 🎰 {html.bold('Слоты')}. Пример: слоты 2.5к\n"
-                        f"<i>Малый шанс - большой выигрыш!</i>\n\n", reply_markup=kb)
+        f"🎮 {html.italic(await gsname(query.from_user.first_name, query.from_user.id))}, список игр (страница 3):\n{gline()}\n"
+        f" • 🛕 {html.bold('Башня')}. Пример: башня 1к\n"
+        f"<i>9 уровней, множитель в конце - х7.1</i>\n\n"
+        f" • 📦 {html.bold('Сундуки')}. Пример: сундуки 1к\n"
+        f"<i>4 варианта и 1 верный</i>\n\n"
+        f" • 🪙 {html.bold('Монетка')}. Пример: монетка 10к\n"
+        f"<i>Орел или решка?</i>\n\n"
+        f" • 🎰 {html.bold('Слоты')}. Пример: слоты 2.5к\n"
+        f"<i>Малый шанс - большой выигрыш!</i>\n\n", reply_markup=kb)
 
 
 @dp.callback_query(F.data.startswith("callback_games_from_help:"))
@@ -5307,18 +5547,21 @@ async def handle_callback_games_question(callback: CallbackQuery):
     if int(uid) != int(ci):
         return callback.answer("Это не твоя кнопка!")
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="▶️ Страница 2", callback_data=f"games_page2:{uid}")], [InlineKeyboardButton(text="📕 Помощь", callback_data=f"help_callback:{uid}")]])
-    await callback.message.edit_text(f"🎮 {html.italic(await gsname(callback.from_user.first_name, callback.from_user.id))}, список игр:\n{gline()}\n"
-                        f" • 🎰 {html.bold('Рулетка')}. Пример: рул 500 кра\n"
-                        f"<i>Типы ставок: чел, нечет, кра, чер, зел, зеро, 0-11, 12-22, 23-35</i>\n\n"
-                        f" • 🚀 {html.bold('Краш')}. Пример: краш 200 3\n"
-                        f"<i>Не стоит ставить на 10)</i>\n\n"
-                        f" • ⛏️ {html.bold('Золото')}. Пример: золото 2.5к\n"
-                        f"<i>50 на 50</i>\n\n"
-                        f" • 💣 {html.bold('Мины')}. Пример: мины 250 3\n"
-                        f"<i>Можно выбирать количество мин от 1 до 6, и поставить после ставки</i>\n\n"
-                        f" • 💠 {html.bold('Алмазы')}. Пример: алмазы 5к 1\n"
-                        f"<i>Максимальное количество мин: 2</i>\n\n", reply_markup=kb)
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="▶️ Страница 2", callback_data=f"games_page2:{uid}")],
+                         [InlineKeyboardButton(text="📕 Помощь", callback_data=f"help_callback:{uid}")]])
+    await callback.message.edit_text(
+        f"🎮 {html.italic(await gsname(callback.from_user.first_name, callback.from_user.id))}, список игр:\n{gline()}\n"
+        f" • 🎰 {html.bold('Рулетка')}. Пример: рул 500 кра\n"
+        f"<i>Типы ставок: чел, нечет, кра, чер, зел, зеро, 0-11, 12-22, 23-35</i>\n\n"
+        f" • 🚀 {html.bold('Краш')}. Пример: краш 200 3\n"
+        f"<i>Не стоит ставить на 10)</i>\n\n"
+        f" • ⛏️ {html.bold('Золото')}. Пример: золото 2.5к\n"
+        f"<i>50 на 50</i>\n\n"
+        f" • 💣 {html.bold('Мины')}. Пример: мины 250 3\n"
+        f"<i>Можно выбирать количество мин от 1 до 6, и поставить после ставки</i>\n\n"
+        f" • 💠 {html.bold('Алмазы')}. Пример: алмазы 5к 1\n"
+        f"<i>Максимальное количество мин: 2</i>\n\n", reply_markup=kb)
 
 
 @dp.callback_query(F.data.startswith("callback_games:"))
@@ -5328,35 +5571,41 @@ async def handle_callback_games_question(callback: CallbackQuery):
     if int(uid) != int(ci):
         return callback.answer("Это не твоя кнопка!")
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="▶️ Страница 2", callback_data=f"games_page2:{uid}")], [InlineKeyboardButton(text="📕 Помощь", callback_data=f"help_callback:{uid}")]])
-    await callback.message.edit_text(f"🎮 {html.italic(await gsname(callback.from_user.first_name, callback.from_user.id))}, список игр:\n{gline()}\n"
-                        f" • 🎰 {html.bold('Рулетка')}. Пример: рул 500 кра\n"
-                        f"<i>Типы ставок: чел, нечет, кра, чер, зел, зеро, 0-11, 12-22, 23-35</i>\n\n"
-                        f" • 🚀 {html.bold('Краш')}. Пример: краш 200 3\n"
-                        f"<i>Не стоит ставить на 10)</i>\n\n"
-                        f" • ⛏️ {html.bold('Золото')}. Пример: золото 2.5к\n"
-                        f"<i>50 на 50</i>\n\n"
-                        f" • 💣 {html.bold('Мины')}. Пример: мины 250 3\n"
-                        f"<i>Можно выбирать количество мин от 1 до 6, и поставить после ставки</i>\n\n"
-                        f" • 💠 {html.bold('Алмазы')}. Пример: алмазы 5к 1\n"
-                        f"<i>Максимальное количество мин: 2</i>\n\n", reply_markup=kb)
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="▶️ Страница 2", callback_data=f"games_page2:{uid}")],
+                         [InlineKeyboardButton(text="📕 Помощь", callback_data=f"help_callback:{uid}")]])
+    await callback.message.edit_text(
+        f"🎮 {html.italic(await gsname(callback.from_user.first_name, callback.from_user.id))}, список игр:\n{gline()}\n"
+        f" • 🎰 {html.bold('Рулетка')}. Пример: рул 500 кра\n"
+        f"<i>Типы ставок: чел, нечет, кра, чер, зел, зеро, 0-11, 12-22, 23-35</i>\n\n"
+        f" • 🚀 {html.bold('Краш')}. Пример: краш 200 3\n"
+        f"<i>Не стоит ставить на 10)</i>\n\n"
+        f" • ⛏️ {html.bold('Золото')}. Пример: золото 2.5к\n"
+        f"<i>50 на 50</i>\n\n"
+        f" • 💣 {html.bold('Мины')}. Пример: мины 250 3\n"
+        f"<i>Можно выбирать количество мин от 1 до 6, и поставить после ставки</i>\n\n"
+        f" • 💠 {html.bold('Алмазы')}. Пример: алмазы 5к 1\n"
+        f"<i>Максимальное количество мин: 2</i>\n\n", reply_markup=kb)
 
 
 @dp.message(F.text.lower().in_(["игры", "/games", "играть", "/game", "/game@swagametrbot", "/games@swagametrbot"]))
 async def handle_games_question(message: Message):
     uid = message.from_user.id
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="▶️ Страница 2", callback_data=f"games_page2:{uid}")]])
-    await message.reply(f"🎮 {html.italic(await gsname(message.from_user.first_name, message.from_user.id))}, список игр (страница 1):\n{gline()}\n"
-                        f" • 🎰 {html.bold('Рулетка')}. Пример: рул 500 кра\n"
-                        f"<i>Типы ставок: чел, нечет, кра, чер, зел, зеро, 0-11, 12-22, 23-35</i>\n\n"
-                        f" • 🚀 {html.bold('Краш')}. Пример: краш 200 3\n"
-                        f"<i>Не стоит ставить на 10)</i>\n\n"
-                        f" • ⛏️ {html.bold('Золото')}. Пример: золото 2.5к\n"
-                        f"<i>50 на 50</i>\n\n"
-                        f" • 💣 {html.bold('Мины')}. Пример: мины 250 3\n"
-                        f"<i>Можно выбирать количество мин от 1 до 6, и поставить после ставки</i>\n\n"
-                        f" • 💠 {html.bold('Алмазы')}. Пример: алмазы 5к 1\n"
-                        f"<i>Максимальное количество мин: 2</i>\n\n", reply_markup=kb)
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="▶️ Страница 2", callback_data=f"games_page2:{uid}")]])
+    await message.reply(
+        f"🎮 {html.italic(await gsname(message.from_user.first_name, message.from_user.id))}, список игр (страница 1):\n{gline()}\n"
+        f" • 🎰 {html.bold('Рулетка')}. Пример: рул 500 кра\n"
+        f"<i>Типы ставок: чел, нечет, кра, чер, зел, зеро, 0-11, 12-22, 23-35</i>\n\n"
+        f" • 🚀 {html.bold('Краш')}. Пример: краш 200 3\n"
+        f"<i>Не стоит ставить на 10)</i>\n\n"
+        f" • ⛏️ {html.bold('Золото')}. Пример: золото 2.5к\n"
+        f"<i>50 на 50</i>\n\n"
+        f" • 💣 {html.bold('Мины')}. Пример: мины 250 3\n"
+        f"<i>Можно выбирать количество мин от 1 до 6, и поставить после ставки</i>\n\n"
+        f" • 💠 {html.bold('Алмазы')}. Пример: алмазы 5к 1\n"
+        f"<i>Максимальное количество мин: 2</i>\n\n", reply_markup=kb)
+
 
 @dp.callback_query(F.data.startswith("games_page2:"))
 async def games_second_page(query: CallbackQuery):
@@ -5366,19 +5615,21 @@ async def games_second_page(query: CallbackQuery):
     if int(uid) != int(caller_id):
         return query.answer("Это не твоя кнопка!")
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="◀️ Страница 1", callback_data=f"callback_games:{uid}"), InlineKeyboardButton(text="▶️ Страница 3", callback_data=f"games_page3:{uid}")]])
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="◀️ Страница 1", callback_data=f"callback_games:{uid}"),
+         InlineKeyboardButton(text="▶️ Страница 3", callback_data=f"games_page3:{uid}")]])
     await query.message.edit_text(
-                        f"🎮 {html.italic(await gsname(query.from_user.first_name, query.from_user.id))}, список игр (страница 2):\n{gline()}\n"
-                        f" • 🎳 {html.bold('Боул')} (боулинг). Пример: боул 500\n"
-                        f"<i>Игра между игроками</i>\n\n"
-                        f" • 🔫 {html.bold('РР')} (русская рулетка). Пример: рр 3к\n"
-                        f"<i>С каждым выстрелом множитель и шанс поражения увеличиваются пропорционально</i>\n\n"
-                        f" • 🏀 {html.bold('Баскетболл')}. Пример: баск 2.5к\n"
-                        f"<i>Проверим твою меткость?</i>\n\n"
-                        f" • 🎲 {html.bold('Кубик')}. Пример: кубик 10к нечет\n"
-                        f"<i>Чет/нечет - х1.9, числа 1-6 - х3.5</i>\n\n"
-                        f" • ⚔️ {html.bold('Дуэль')}. Пример: дуэль 5к\n"
-                        f"<i>Бросайте кубики, победитель забирает все!</i>\n\n", reply_markup=kb)
+        f"🎮 {html.italic(await gsname(query.from_user.first_name, query.from_user.id))}, список игр (страница 2):\n{gline()}\n"
+        f" • 🎳 {html.bold('Боул')} (боулинг). Пример: боул 500\n"
+        f"<i>Игра между игроками</i>\n\n"
+        f" • 🔫 {html.bold('РР')} (русская рулетка). Пример: рр 3к\n"
+        f"<i>С каждым выстрелом множитель и шанс поражения увеличиваются пропорционально</i>\n\n"
+        f" • 🏀 {html.bold('Баскетболл')}. Пример: баск 2.5к\n"
+        f"<i>Проверим твою меткость?</i>\n\n"
+        f" • 🎲 {html.bold('Кубик')}. Пример: кубик 10к нечет\n"
+        f"<i>Чет/нечет - х1.9, числа 1-6 - х3.5</i>\n\n"
+        f" • ⚔️ {html.bold('Дуэль')}. Пример: дуэль 5к\n"
+        f"<i>Бросайте кубики, победитель забирает все!</i>\n\n", reply_markup=kb)
 
 
 @dp.message(F.text.lower().startswith("краш"))
@@ -5478,7 +5729,8 @@ async def play_dice(message: Message):
 
         # Ожидаем формат: кости <количество> <м|б|равно>
         if len(parts) != 3:
-            return await message.reply(f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{html.code("➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼")}\n<b>Пример:</b> {html.code('кости 250 м')}\n<b>Пример:</b> {html.code('кости все равно')}")
+            return await message.reply(
+                f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{html.code("➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼ ➼")}\n<b>Пример:</b> {html.code('кости 250 м')}\n<b>Пример:</b> {html.code('кости все равно')}")
 
         # Получаем баланс из глобального data
         data = await load_data(user_id)
@@ -5498,7 +5750,8 @@ async def play_dice(message: Message):
         elif parts[1].isdigit():
             bet = int(parts[1])
         else:
-            return await message.reply(f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{gline()}\n<b>Пример:</b> {html.code('кости 250 м')}\n<b>Пример:</b> {html.code('кости все равно')}")
+            return await message.reply(
+                f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{gline()}\n<b>Пример:</b> {html.code('кости 250 м')}\n<b>Пример:</b> {html.code('кости все равно')}")
 
         if bet <= 0 or balance < bet:
             return await message.reply("❌ Недостаточно средств!")
@@ -5506,7 +5759,8 @@ async def play_dice(message: Message):
         # Парсим выбор «м», «б» или «равно»
         choice = parts[2]
         if choice not in ["м", "б", "равно"]:
-            return await message.reply(f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{gline()}\n<b>Пример:</b> {html.code('кости 250 м')}\n<b>Пример:</b> {html.code('кости все равно')}")
+            return await message.reply(
+                f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{gline()}\n<b>Пример:</b> {html.code('кости 250 м')}\n<b>Пример:</b> {html.code('кости все равно')}")
 
         # Выполняем бросок
         d1_raw = await message.reply_dice(emoji="🎲")
@@ -5553,6 +5807,7 @@ async def play_dice(message: Message):
 # Персональні блокування для обробки івентів по кожному гравцю (в пам'яті процесу)
 user_gold_locks = {}  # user_id -> asyncio.Lock()
 
+
 def _get_user_lock(user_id):
     """Отримати або створити asyncio.Lock для user_id (лениво, без явних імпортів)."""
     lock = user_gold_locks.get(user_id)
@@ -5561,12 +5816,14 @@ def _get_user_lock(user_id):
         user_gold_locks[user_id] = lock
     return lock
 
+
 def generate_game_id():
     try:
         return __import__("uuid").uuid4().hex
     except Exception:
         generate_game_id._cnt = getattr(generate_game_id, "_cnt", 0) + 1
         return f"g{generate_game_id._cnt}"
+
 
 # ---- Рендери ----
 def render_gold_game(game):
@@ -5592,13 +5849,14 @@ def render_gold_game(game):
         rows.append(f"|{left}|{right}|{value} mDrops ({GOLD_MULTIPLIERS[i]}x)")
 
     text = (
-        "Выбери ячейку чтобы продолжить игру Золото!\n"
-        f"{gline()}\n"
-        f"💰 Текущий приз: {current_multiplier}x / {format_balance(current_amount)} mDrops\n"
-        f"⚡️ Следующая ячейка: {next_multiplier}x / {format_balance(next_amount)} mDrops\n\n"
-        + "\n".join(rows)
+            "Выбери ячейку чтобы продолжить игру Золото!\n"
+            f"{gline()}\n"
+            f"💰 Текущий приз: {current_multiplier}x / {format_balance(current_amount)} mDrops\n"
+            f"⚡️ Следующая ячейка: {next_multiplier}x / {format_balance(next_amount)} mDrops\n\n"
+            + "\n".join(rows)
     )
     return text
+
 
 async def render_gold_result(game, lost=False, collected=False, winnings=None, multiplier=None):
     stake = int(game["stake"])
@@ -5662,6 +5920,8 @@ async def render_gold_result(game, lost=False, collected=False, winnings=None, m
         head = "🎮 Результаты игры:"
 
     return head + f"\n{gline()}\n" + "\n".join(rows)
+
+
 # ---- Клавіатура (повертає InlineKeyboardMarkup; припускається, що InlineKeyboardMarkup/InlineKeyboardButton доступні) ----
 def gold_keyboard(player_id: str, game_id: str, level: int):
     """
@@ -5695,6 +5955,7 @@ def gold_keyboard(player_id: str, game_id: str, level: int):
             ]
         )
 
+
 # ---- Обробники (вставте як handlers в вашому боті) ----
 @dp.message(F.text.lower().startswith("золото"))
 async def start_gold_game_handler(message: Message):
@@ -5715,7 +5976,8 @@ async def start_gold_game_handler(message: Message):
         elif arg.replace(".", "", 1).isdigit():
             stake = int(float(arg))
         else:
-            await message.reply(f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{gline()}\n<b>Пример:</b> {html.code('золото 25к')}\n<b>Пример:</b> {html.code('золото все')}")
+            await message.reply(
+                f"{html.italic(f'🤨 {message.from_user.first_name}, ты ввел что-то неправильно!')}\n{gline()}\n<b>Пример:</b> {html.code('золото 25к')}\n<b>Пример:</b> {html.code('золото все')}")
 
         if stake <= 0 or stake > int(data.get("coins", 0)):
             return await message.reply("❗ Недостаточно средств!")
@@ -5766,6 +6028,7 @@ async def start_gold_game_handler(message: Message):
 
     except Exception as e:
         await handle_error(getattr(message.from_user, "username", None), e, message.from_user.id, 118)
+
 
 @dp.callback_query(F.data.startswith("gold_choose"))
 @flood_protect(min_delay=0.5)
@@ -5844,6 +6107,7 @@ async def handle_gold_choice(callback: CallbackQuery):
     except Exception as e:
         await handle_error(getattr(callback.from_user, "username", None), e, callback.from_user.id, 119)
 
+
 @dp.callback_query(F.data.startswith("gold_collect"))
 @flood_protect(min_delay=0.5)
 async def collect_prize(callback: CallbackQuery):
@@ -5881,9 +6145,11 @@ async def collect_prize(callback: CallbackQuery):
                 del data["gold_games"][game_id]
             await save_data(player_id, data)
 
-            return await callback.message.edit_text(await render_gold_result(game, collected=True, winnings=winnings, multiplier=multiplier))
+            return await callback.message.edit_text(
+                await render_gold_result(game, collected=True, winnings=winnings, multiplier=multiplier))
     except Exception as e:
         await handle_error(getattr(callback.from_user, "username", None), e, callback.from_user.id, 120)
+
 
 @dp.callback_query(F.data.startswith("gold_cancel"))
 @flood_protect(min_delay=0.5)
@@ -5918,7 +6184,9 @@ async def cancel_gold_game(callback: CallbackQuery):
     except Exception as e:
         await handle_error(getattr(callback.from_user, "username", None), e, callback.from_user.id, 121)
 
+
 user_tower_locks: Dict[str, asyncio.Lock] = {}
+
 
 def _get_tower_lock(user_id: str) -> asyncio.Lock:
     lock = user_tower_locks.get(user_id)
@@ -5926,6 +6194,7 @@ def _get_tower_lock(user_id: str) -> asyncio.Lock:
         lock = asyncio.Lock()
         user_tower_locks[user_id] = lock
     return lock
+
 
 # --- допоміжні функції ---
 
@@ -6130,7 +6399,8 @@ async def on_tower_callback(callback: CallbackQuery):
                 if not towers:
                     data.pop('towers', None)
                 await save_data(user_id, data)
-                return await callback.message.edit_text(f"❌ Игра отменена, ставка {format_balance(bet)} mDrops возвращена.", reply_markup=None)
+                return await callback.message.edit_text(
+                    f"❌ Игра отменена, ставка {format_balance(bet)} mDrops возвращена.", reply_markup=None)
 
             # COLLECT
             if action == 'collect':
@@ -6258,7 +6528,7 @@ async def on_tower_callback(callback: CallbackQuery):
             mult = TOWER_MULTIPLIERS[new_level - 1]
             await callback.message.edit_text(
                 f"📈 Уровень: {new_level}/9\n"
-                f"💰 Возможный выигрыш: {format_balance(int(tower.get('bet',0) * mult))} mDrops\n"
+                f"💰 Возможный выигрыш: {format_balance(int(tower.get('bet', 0) * mult))} mDrops\n"
                 f"🔥 Множитель: x{mult:.1f}",
                 reply_markup=await build_tower_keyboard(user_id, game_id)
             )
@@ -6338,17 +6608,19 @@ async def do_nothing(callback: CallbackQuery):
     await callback.answer()
 
 
-
 MINES_GAMES: Dict[str, dict] = {}
 
 # per-user locks to avoid race conditions (lock by owner id)
 user_mines_locks: Dict[str, asyncio.Lock] = {}
+
+
 def _get_mines_lock(user_id: str) -> asyncio.Lock:
     lock = user_mines_locks.get(user_id)
     if lock is None:
         lock = asyncio.Lock()
         user_mines_locks[user_id] = lock
     return lock
+
 
 # ---------------- multipliers ----------------
 def get_multipliers_for_mines_count(mines_count: int, house_edge: float = 1.0) -> List[float]:
@@ -6378,18 +6650,23 @@ def get_multipliers_for_mines_count(mines_count: int, house_edge: float = 1.0) -
         multipliers.append(round(mult, 4))
     return multipliers
 
+
 # ---------- helpers ----------
 def _new_game_id() -> str:
     return uuid.uuid4().hex
 
+
 def _cb_cell(game_id: str, idx: int) -> str:
     return f"mines:cell:{game_id}:{idx}"
+
 
 def _cb_collect(game_id: str) -> str:
     return f"mines:collect:{game_id}"
 
+
 def _cb_cancel(game_id: str) -> str:
     return f"mines:cancel:{game_id}"
+
 
 # ---------------- start handler ----------------
 @dp.message(F.text.lower().startswith("мины"))
@@ -6454,11 +6731,11 @@ async def start_mines(message: Message):
             "game_id": game_id,
             "bet": int(bet),
             "field": field,
-            "opened": [],            # list of opened indices
-            "mines": mines,          # list of mine indices (int)
+            "opened": [],  # list of opened indices
+            "mines": mines,  # list of mine indices (int)
             "mines_count": mines_count,
             "owner": user_id,
-            "state": "playing",      # playing | lost | won | collected | cancelled
+            "state": "playing",  # playing | lost | won | collected | cancelled
             "started_at": now_ms,
             "last_action_ts": 0
         }
@@ -6492,6 +6769,7 @@ async def start_mines(message: Message):
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 300)
 
+
 # ---------------- keyboard builder ----------------
 def build_mines_keyboard(game_id: str) -> InlineKeyboardMarkup:
     game = MINES_GAMES.get(game_id)
@@ -6513,11 +6791,13 @@ def build_mines_keyboard(game_id: str) -> InlineKeyboardMarkup:
     prize_next = round(game["bet"] * multipliers[idx])
 
     if opened > 0:
-        buttons.append([InlineKeyboardButton(text=f"💰 Забрать ({format_balance(prize_next)} mDrops)", callback_data=_cb_collect(game_id))])
+        buttons.append([InlineKeyboardButton(text=f"💰 Забрать ({format_balance(prize_next)} mDrops)",
+                                             callback_data=_cb_collect(game_id))])
     else:
         buttons.append([InlineKeyboardButton(text="❌ Отменить", callback_data=_cb_cancel(game_id))])
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
 
 # ---------------- final keyboard builder ----------------
 def build_final_mines_keyboard(field: List[str], include_noop: bool = True) -> InlineKeyboardMarkup:
@@ -6601,7 +6881,8 @@ async def handle_mines(callback: CallbackQuery):
                 data["won_coins"] = int(data.get("won_coins", 0)) + int(reward)
                 await save_data(owner_id, data)
 
-                await callback.message.edit_text(f"💰 Вы забрали {format_balance(reward)} mDrops! Поздравляем!", reply_markup=final_keyboard)
+                await callback.message.edit_text(f"💰 Вы забрали {format_balance(reward)} mDrops! Поздравляем!",
+                                                 reply_markup=final_keyboard)
                 MINES_GAMES.pop(game_id, None)
                 return
 
@@ -6646,7 +6927,8 @@ async def handle_mines(callback: CallbackQuery):
                     await save_data(owner_id, data)
 
                     game["state"] = "lost"
-                    await callback.message.edit_text(f"💥 Вы попали на мину!\n\n💸 Ставка: {format_balance(bet)} mDrops", reply_markup=final_keyboard)
+                    await callback.message.edit_text(f"💥 Вы попали на мину!\n\n💸 Ставка: {format_balance(bet)} mDrops",
+                                                     reply_markup=final_keyboard)
                     MINES_GAMES.pop(game_id, None)
                     return
 
@@ -6677,7 +6959,8 @@ async def handle_mines(callback: CallbackQuery):
                     data["won_coins"] = int(data.get("won_coins", 0)) + int(reward)
                     await save_data(owner_id, data)
 
-                    await callback.message.edit_text(f"🏆 Вы прошли все мины! Награда: {format_balance(reward)} mDrops", reply_markup=final_keyboard)
+                    await callback.message.edit_text(f"🏆 Вы прошли все мины! Награда: {format_balance(reward)} mDrops",
+                                                     reply_markup=final_keyboard)
                     MINES_GAMES.pop(game_id, None)
                     return
 
@@ -6703,6 +6986,7 @@ async def handle_mines(callback: CallbackQuery):
             await handle_error(callback.from_user.username, e, callback.from_user.id, 301)
         except Exception:
             pass
+
 
 @dp.message(F.text.lower().startswith("рул"))
 async def roulette_game(message: Message):
@@ -6775,6 +7059,7 @@ async def roulette_game(message: Message):
 
     # Визначаємо перемогу та множник
     multiplier = 2
+
     def is_win():
         nonlocal multiplier
         # зеро / зел
@@ -6823,17 +7108,17 @@ async def roulette_game(message: Message):
     # Формуємо стильний результат
     # Верхній заголовок
     header = (
-        html.bold("🎰 РУЛЕТКА — РЕЗУЛЬТАТ")
-        + "\n"
-        + html.code("────────────────────────────")
-        + "\n"
+            html.bold("🎰 РУЛЕТКА — РЕЗУЛЬТАТ")
+            + "\n"
+            + html.code("────────────────────────────")
+            + "\n"
     )
 
     # Основна «карта» випавшого числа
     number_block = (
-        f"{color_emoji}  {html.bold(str(number))}  —  {html.bold(color_label)}"
-        + (f", {html.bold(parity.upper())}" if parity else "")
-        + "\n"
+            f"{color_emoji}  {html.bold(str(number))}  —  {html.bold(color_label)}"
+            + (f", {html.bold(parity.upper())}" if parity else "")
+            + "\n"
     )
 
     # Підсумкова цитата (використовуємо blockquote для акценту)
@@ -6876,10 +7161,11 @@ async def roulette_game(message: Message):
     await save_data(uid, data)
     await message.reply(result_text, parse_mode="HTML")
 
+
 # ----------- КНБ -----------
 RPS_CHOICES = ["камень", "ножницы", "бумага"]
 RPS_WIN = {
-    "камень": "ножницы",     # камень beats ножницы
+    "камень": "ножницы",  # камень beats ножницы
     "ножницы": "бумага",
     "бумага": "камень"
 }
@@ -6888,6 +7174,7 @@ RPS_WIN = {
 # game structure: {"user1": uid, "user2": uid_or_None, "bet": int, "choice1": None|str, "choice2": None|str}
 rps_challenges: Dict[str, Dict] = {}
 
+
 def build_rps_choice_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🪨 Камень", callback_data="rps_choice_камень")],
@@ -6895,23 +7182,27 @@ def build_rps_choice_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="📄 Бумага", callback_data="rps_choice_бумага")],
     ])
 
+
 def build_rps_choice_with_cancel() -> InlineKeyboardMarkup:
     kb = build_rps_choice_keyboard()
     kb.inline_keyboard.append([InlineKeyboardButton(text="❌ Отменить", callback_data="rps_cancel")])
     return kb
+
 
 def build_rps_accept_keyboard(user_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="👊 Принять вызов", callback_data=f"rps_accept_{user_id}")]
     ])
 
+
 def build_rps_accept_with_cancel(user_id: str) -> InlineKeyboardMarkup:
     kb = build_rps_accept_keyboard(user_id)
     kb.inline_keyboard.append([InlineKeyboardButton(text="❌ Отменить", callback_data="rps_cancel")])
     return kb
 
+
 # ---------- START CHALLENGE ----------
-#@dp.message(F.text.lower().startswith("кнб"))
+# @dp.message(F.text.lower().startswith("кнб"))
 async def start_rps_challenge(message: Message):
     # Only in groups
     if message.chat.type == "private":
@@ -6967,6 +7258,7 @@ async def start_rps_challenge(message: Message):
         f"🎮 {await gsname(message.from_user.first_name, message.from_user.id)} начал игру КНБ на {format_balance(bet)} mDrops!\nВыберите ход:",
         reply_markup=build_rps_choice_with_cancel()
     )
+
 
 # ---------- PLAYER CHOICE ----------
 @dp.callback_query(lambda c: c.data and c.data.startswith("rps_choice_"))
@@ -7061,6 +7353,7 @@ async def handle_rps_choice(callback: CallbackQuery):
     # If not both choices yet, just confirm the click
     await callback.answer("Ход сохранён.", show_alert=False)
 
+
 # ---------- ACCEPT CHALLENGE ----------
 @dp.callback_query(lambda c: c.data and c.data.startswith("rps_accept_"))
 @flood_protect(min_delay=0.5)
@@ -7104,6 +7397,7 @@ async def player_two_accept(callback: CallbackQuery):
             f"✊ Игрок 2 ({await gsname(callback.from_user.first_name, callback.from_user.id)}) присоединился! Выберите ваш ход:",
             reply_markup=build_rps_choice_with_cancel()
         )
+
 
 # ---------- CANCEL GAME ----------
 @dp.callback_query(F.data == "rps_cancel")
@@ -7162,11 +7456,13 @@ async def handle_rps_cancel(callback: CallbackQuery):
 
     await callback.answer("Игра отменена", show_alert=False)
 
+
 # --------- БОУЛИНГ -----------
 
 MIN_BET = 10
 
 bowling_games: Dict[str, Dict] = {}
+
 
 def build_bowling_accept_keyboard(user_id: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -7174,11 +7470,14 @@ def build_bowling_accept_keyboard(user_id: str) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="❌ Отменить игру", callback_data="bowling_cancel")]
     ])
 
+
 def build_bowling_initial_cancel_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="👊 Принять вызов", callback_data="bowling_noop")],  # noop placeholder (не используется)
+        [InlineKeyboardButton(text="👊 Принять вызов", callback_data="bowling_noop")],
+        # noop placeholder (не используется)
         [InlineKeyboardButton(text="❌ Отменить игру", callback_data="bowling_cancel")]
     ])
+
 
 # Хендлер запуска игры (триггер: сообщение, начинающееся с "боул")
 @dp.message(F.text.lower().startswith("боул"))
@@ -7194,7 +7493,6 @@ async def bowling_start(message: Message):
     if not user_data:
         await create_user_data(uid)
         user_data = await load_data(uid)
-
 
     if len(parts) < 2:
         return await message.reply(
@@ -7246,6 +7544,7 @@ async def bowling_start(message: Message):
         f"Кто примет вызов на {format_balance(bet)} mDrops?",
         reply_markup=build_bowling_accept_keyboard(uid)
     )
+
 
 # Обработчик принятия вызова
 @dp.callback_query(lambda c: c.data and c.data.startswith("bowling_accept_"))
@@ -7333,6 +7632,7 @@ async def bowling_accept(callback: CallbackQuery):
         f"🏆 Победа за {winner_num}! 💰 +{format_balance(total_win)} mDrops"
     )
 
+
 # Обработчик отмены игры (возврат ставок)
 @dp.callback_query(F.data == "bowling_cancel")
 @flood_protect(min_delay=0.5)
@@ -7388,7 +7688,10 @@ async def bowling_cancel(callback: CallbackQuery):
         pass
 
     await callback.answer("Игра отменена. Ставки возвращены.", show_alert=False)
+
+
 chest_games = {}  # chat_id: {user, bet, correct}
+
 
 @dp.message(F.text.lower().startswith("сундуки"))
 async def chest_start(message: Message):
@@ -7447,6 +7750,7 @@ async def chest_start(message: Message):
         reply_markup=kb
     )
 
+
 @dp.callback_query(F.data.startswith("chest_"))
 @flood_protect(min_delay=0.5)
 async def chest_pick(callback: CallbackQuery):
@@ -7485,8 +7789,10 @@ async def chest_pick(callback: CallbackQuery):
             f"😢 Ты выбрал сундук {pick}, но правильный был сундук {correct}.\n\n💸 Ставка: {format_balance(bet)} mDrops"
         )
 
+
 # --------- РР -----------
 active_rr_games = {}
+
 
 def build_rr_keyboard(user_id: int, first_round: bool = False):
     kb = InlineKeyboardBuilder()
@@ -7496,6 +7802,7 @@ def build_rr_keyboard(user_id: int, first_round: bool = False):
     else:
         kb.button(text="🛑 Стоп", callback_data=f"rr_stop:{user_id}")
     return kb.as_markup()
+
 
 def compute_rr_multiplier(game: dict) -> float:
     """
@@ -7706,10 +8013,12 @@ async def handle_basketball(message: Message):
         )
 
     if bet > balance:
-        return await message.reply(f"🤨 {await gsname(message.from_user.first_name, message.from_user.id)}, тебе не хватает mDrops!")
+        return await message.reply(
+            f"🤨 {await gsname(message.from_user.first_name, message.from_user.id)}, тебе не хватает mDrops!")
 
     if bet < 10:
-        return await message.reply(f"🤨 {await gsname(message.from_user.first_name, message.from_user.id)}, минимальная ставка - 10 mDrops!")
+        return await message.reply(
+            f"🤨 {await gsname(message.from_user.first_name, message.from_user.id)}, минимальная ставка - 10 mDrops!")
 
     # Списуємо ставку
     data["coins"] -= bet
@@ -7724,11 +8033,15 @@ async def handle_basketball(message: Message):
         win_amount = int(bet * 2.2)
         data["coins"] += win_amount
         await save_data(str(user_id), data)
-        await message.reply(f"🏀 {await gsname(message.from_user.first_name, message.from_user.id)}, гол! Ты выиграл {format_balance(win_amount)} mDrops\nБаланс: {format_balance(data["coins"])} mDrops")
+        await message.reply(
+            f"🏀 {await gsname(message.from_user.first_name, message.from_user.id)}, гол! Ты выиграл {format_balance(win_amount)} mDrops\nБаланс: {format_balance(data["coins"])} mDrops")
     else:
-        await message.reply(f"❌ {await gsname(message.from_user.first_name, message.from_user.id)}, промах! Ты програл {format_balance(bet)} mDrops\nБаланс: {format_balance(data["coins"])} mDrops")
+        await message.reply(
+            f"❌ {await gsname(message.from_user.first_name, message.from_user.id)}, промах! Ты програл {format_balance(bet)} mDrops\nБаланс: {format_balance(data["coins"])} mDrops")
+
 
 active_duels = {}
+
 
 @dp.message(F.text.lower().startswith("дуэль"))
 async def start_duel(message: Message):
@@ -7838,7 +8151,7 @@ async def accept_duel(callback: CallbackQuery):
         await save_data(str(opponent_id), opponent_data)
         await save_data(str(initiator_id), initiator_data)
         await callback.message.answer(
-            f"🏆 Победил {await gsname(initiator_name, initiator_id)}!\nВыигрыш: {format_balance(bet*2)} mDrops"
+            f"🏆 Победил {await gsname(initiator_name, initiator_id)}!\nВыигрыш: {format_balance(bet * 2)} mDrops"
         )
     elif val2 > val1:
         opponent_data["coins"] += bet * 2
@@ -7847,7 +8160,7 @@ async def accept_duel(callback: CallbackQuery):
         await save_data(str(initiator_id), initiator_data)
         await save_data(str(opponent_id), opponent_data)
         await callback.message.answer(
-            f"🏆 Победил {await gsname(opponent_name, opponent_id)}!\nВыигрыш: {format_balance(bet*2)} mDrops"
+            f"🏆 Победил {await gsname(opponent_name, opponent_id)}!\nВыигрыш: {format_balance(bet * 2)} mDrops"
         )
     else:
         initiator_data["coins"] += bet
@@ -7855,6 +8168,7 @@ async def accept_duel(callback: CallbackQuery):
         await save_data(str(initiator_id), initiator_data)
         await save_data(str(opponent_id), opponent_data)
         await callback.message.answer("🤝 Ничья! Ставки возвращены.")
+
 
 @dp.callback_query(F.data.startswith("cancel_duel:"))
 @flood_protect(min_delay=0.5)
@@ -7871,6 +8185,7 @@ async def cancel_duel(callback: CallbackQuery):
 
     await callback.message.edit_text("⚔️ Дуэль была отменена ❌")
     await callback.answer("Вы отменили дуэль ✅")
+
 
 coin_games: Dict[Tuple[int, int], Dict[str, Any]] = {}
 
@@ -7921,7 +8236,8 @@ async def handle_coin_game(msg: Message):
     if bet < 10:
         return await msg.reply(f"❌ {await gsname(name, user_id)}, минимальная ставка - 10 mDrops")
     if bet > data["coins"]:
-        return await msg.reply(f"❌ {await gsname(name, user_id)}, ставка не может быть больше баланса!\n\n💰 Твой баланс: {format_balance(data['coins'])}")
+        return await msg.reply(
+            f"❌ {await gsname(name, user_id)}, ставка не может быть больше баланса!\n\n💰 Твой баланс: {format_balance(data['coins'])}")
 
     # Снимаем ставку відразу
     data["coins"] -= bet
@@ -8187,7 +8503,8 @@ async def handle_cube_game(msg: Message):
         return await msg.reply(
             f"😢 {await gsname(name, uid)} ты проиграл!\n{gline()}\n🎲 Число: {html.bold(number)} ({html.code(f"{b_or_m}")}, {html.code(f"{c_or_n}")})\n\n💸 Ставка: {format_balance(bet)} mDrops")
 
-DIAMOND_GAMES: Dict[str, dict] = {}      # game_id -> state
+
+DIAMOND_GAMES: Dict[str, dict] = {}  # game_id -> state
 user_diamond_locks: Dict[str, asyncio.Lock] = {}  # locks per user (to avoid races)
 
 TOTAL_ROWS = 50
@@ -8195,12 +8512,14 @@ COLUMNS = 3
 SHOW_PREV_ROWS = 8
 HOUSE_EDGE = 0.985
 
+
 def _get_diamond_lock(user_id: str) -> asyncio.Lock:
     lock = user_diamond_locks.get(user_id)
     if lock is None:
         lock = asyncio.Lock()
         user_diamond_locks[user_id] = lock
     return lock
+
 
 # ---------- Multipliers ----------
 def calc_next_multiplier(state: dict) -> float:
@@ -8218,15 +8537,18 @@ def calc_next_multiplier(state: dict) -> float:
     mult = (1.0 / p_safe) * HOUSE_EDGE
     return round(mult, 6)
 
+
 def product_multipliers(state: dict) -> float:
     prod = 1.0
     for m in state.get("multipliers_history", []):
         prod *= m
     return round(prod, 6)
 
+
 # ---------- Game lifecycle (in-memory) ----------
 def _new_game_id() -> str:
     return uuid.uuid4().hex
+
 
 async def start_diamonds_game(user_id: str, bet: int, mines_amount: int = 1) -> str:
     """
@@ -8262,11 +8584,14 @@ async def start_diamonds_game(user_id: str, bet: int, mines_amount: int = 1) -> 
     }
     return game_id
 
+
 def _get_state_for_game(game_id: str) -> Optional[dict]:
     return DIAMOND_GAMES.get(game_id)
 
+
 def _end_and_cleanup(game_id: str):
     DIAMOND_GAMES.pop(game_id, None)
+
 
 # ---------- Keyboard builder ----------
 def build_diamonds_keyboard_for_game(game_id: str) -> InlineKeyboardMarkup:
@@ -8302,6 +8627,7 @@ def build_diamonds_keyboard_for_game(game_id: str) -> InlineKeyboardMarkup:
         kb_rows.append([InlineKeyboardButton(text="💰 Забрать", callback_data=f"diam_collect:{game_id}")])
 
     return InlineKeyboardMarkup(inline_keyboard=kb_rows)
+
 
 # ---------- Handlers ----------
 @dp.callback_query(F.data.startswith("diam_choose:"))
@@ -8381,8 +8707,8 @@ async def on_diam_choose(cb: CallbackQuery):
                 await cb.message.edit_text(
                     f"💥 <b>{await gsname(cb.from_user.first_name, cb.from_user.id)}, ты попал на мину!</b>\n{gline()}\n"
                     f"<b>🧨 Мин</b>: {state.get('mines_amount')}\n"
-                    f"<b>💸 Ставка</b>: {format_balance(state.get('bet',0))}\n"
-                    f"{html.blockquote(f'<b>🪜 Ряд:</b> {level+1}')}",
+                    f"<b>💸 Ставка</b>: {format_balance(state.get('bet', 0))}\n"
+                    f"{html.blockquote(f'<b>🪜 Ряд:</b> {level + 1}')}",
                     reply_markup=final_kb
                 )
                 _end_and_cleanup(game_id)
@@ -8417,7 +8743,7 @@ async def on_diam_choose(cb: CallbackQuery):
 
             # иначе — показываем следующий уровень и текущие множители (произведение)
             current_total_mult = product_multipliers(state)
-            bet = state.get('bet',0)
+            bet = state.get('bet', 0)
             available_prize = round(current_total_mult, 2) * bet
 
             next_mult = calc_next_multiplier(state)
@@ -8425,7 +8751,7 @@ async def on_diam_choose(cb: CallbackQuery):
             await cb.message.edit_text(
                 f"💠<b> {await gsname(cb.from_user.first_name, uid)}, продолжаем игру!</b>\n{gline()}\n"
                 f"<b>🧨 Мин:</b> {state.get('mines_amount', 1)}\n"
-                f"<b>💸 Ставка:</b> {format_balance(state.get('bet',0))} mDrops\n"
+                f"<b>💸 Ставка:</b> {format_balance(state.get('bet', 0))} mDrops\n"
                 f"<b>📊 Выигрыш:</b> x{round(current_total_mult, 2)} / {format_balance(available_prize)} mDrops\n"
                 f"{html.blockquote(f'<b>🪜 Ряд:</b> {state['level']}')}",
                 reply_markup=kb
@@ -8436,29 +8762,33 @@ async def on_diam_choose(cb: CallbackQuery):
             except Exception:
                 await cb.answer("⚠️ Внутренняя ошибка", show_alert=True)
 
+
 @dp.callback_query(F.data.startswith("diam_cancel:"))
 @flood_protect(min_delay=0.5)
 async def on_diam_cancel(cb: CallbackQuery):
     try:
         _, game_id = cb.data.split(":")
     except Exception:
-        await cb.answer(); return
+        await cb.answer();
+        return
     state = _get_state_for_game(game_id)
     if not state:
-        await cb.answer("❌ Игра не найдена", show_alert=True); return
+        await cb.answer("❌ Игра не найдена", show_alert=True);
+        return
     uid = state["uid"]
     if str(cb.from_user.id) != uid:
-        await cb.answer("❌ Это не ваша игра", show_alert=True); return
+        await cb.answer("❌ Это не ваша игра", show_alert=True);
+        return
 
     lock = _get_diamond_lock(uid)
     async with lock:
-        if int(state.get("level",0)) != 0 or state.get("selected"):
+        if int(state.get("level", 0)) != 0 or state.get("selected"):
             await cb.answer("⚠️ Нельзя отменить после первого хода", show_alert=True)
             return
         # вернуть ставку в DB
         try:
             data = await load_data(uid) or {}
-            bet = int(state.get("bet",0))
+            bet = int(state.get("bet", 0))
             data["coins"] = int(data.get("coins", 0)) + bet
             await save_data(uid, data)
         except Exception:
@@ -8467,23 +8797,27 @@ async def on_diam_cancel(cb: CallbackQuery):
         _end_and_cleanup(game_id)
         await cb.message.edit_text(f"❌ Игра отменена, ставка возвращена.", reply_markup=None)
 
+
 @dp.callback_query(F.data.startswith("diam_collect:"))
 @flood_protect(min_delay=0.5)
 async def on_diam_collect(cb: CallbackQuery):
     try:
         _, game_id = cb.data.split(":")
     except Exception:
-        await cb.answer(); return
+        await cb.answer();
+        return
     state = _get_state_for_game(game_id)
     if not state:
-        await cb.answer("❌ Игра не найдена", show_alert=True); return
+        await cb.answer("❌ Игра не найдена", show_alert=True);
+        return
     uid = state["uid"]
     if str(cb.from_user.id) != uid:
-        await cb.answer("❌ Это не ваша игра", show_alert=True); return
+        await cb.answer("❌ Это не ваша игра", show_alert=True);
+        return
 
     lock = _get_diamond_lock(uid)
     async with lock:
-        if int(state.get("level",0)) == 0:
+        if int(state.get("level", 0)) == 0:
             await cb.answer("⚠️ Слишком рано, вы ещё не сделали ход!", show_alert=True)
             return
         if state.get("lost", False):
@@ -8517,9 +8851,11 @@ async def on_diam_collect(cb: CallbackQuery):
 
         _end_and_cleanup(game_id)
 
+
 @dp.callback_query(F.data == "noop")
 async def do_nothing(cb: CallbackQuery):
     await cb.answer()
+
 
 # ---------- Final keyboard builder (read-only, раскрываем мины при collected или lost) ----------
 def build_final_diamonds_keyboard_for_game(game_id: str) -> InlineKeyboardMarkup:
@@ -8543,7 +8879,7 @@ def build_final_diamonds_keyboard_for_game(game_id: str) -> InlineKeyboardMarkup
     kb_rows = []
     # отображаем ряды сверху вниз: 0..last
     for i in range(0, last + 1):
-        row = bombs[i] if i < len(bombs) else [0]*COLUMNS
+        row = bombs[i] if i < len(bombs) else [0] * COLUMNS
         choice = selected[i] if i < len(selected) else None
         buttons_row = []
         for j in range(COLUMNS):
@@ -8566,6 +8902,7 @@ def build_final_diamonds_keyboard_for_game(game_id: str) -> InlineKeyboardMarkup
         kb_rows.append(buttons_row)
     return InlineKeyboardMarkup(inline_keyboard=kb_rows)
 
+
 # ---------- Start command (создаёт новую игру и возвращает клаву с game_id) ----------
 @dp.message(F.text.lower().startswith("алмазы"))
 async def start_diamonds(msg: Message):
@@ -8580,7 +8917,7 @@ async def start_diamonds(msg: Message):
         )
 
     _, bet_str, mines_str = parts
-    user_data = await load_data(uid) or {"coins":0}
+    user_data = await load_data(uid) or {"coins": 0}
     balance = int(user_data.get("coins", 0))
 
     # parse bet
@@ -8606,7 +8943,7 @@ async def start_diamonds(msg: Message):
         return await msg.reply("❌ Количество мин в ряду должно быть 1 или 2.")
 
     # reserve bet in DB
-    user_data["coins"] = int(user_data.get("coins",0)) - int(bet)
+    user_data["coins"] = int(user_data.get("coins", 0)) - int(bet)
     await save_data(uid, user_data)
 
     # start game (in-memory)
@@ -8622,6 +8959,7 @@ async def start_diamonds(msg: Message):
         f"<b>💸 Ставка</b>: {format_balance(bet)} mDrops\n",
         reply_markup=kb
     )
+
 
 @dp.message(F.text.startswith("слоты"))
 async def handle_slots_game(msg: Message):
@@ -8679,7 +9017,8 @@ async def handle_slots_game(msg: Message):
     await asyncio.sleep(2)
     if result == 64:
         win = bet * 16
-        await msg.reply(f"<b>🎉 {await gsname(name, id)}, ты выиграл!</b>\n{gline()}\n<b>Результат:</b> 7️⃣7️⃣7️⃣\n<b>Выигрыш:</b> x16/{format_balance(win)} mDrops")
+        await msg.reply(
+            f"<b>🎉 {await gsname(name, id)}, ты выиграл!</b>\n{gline()}\n<b>Результат:</b> 7️⃣7️⃣7️⃣\n<b>Выигрыш:</b> x16/{format_balance(win)} mDrops")
 
         data["coins"] += win
         data["won_coins"] += win
@@ -8715,15 +9054,17 @@ async def handle_slots_game(msg: Message):
         data["lost_coins"] += bet
         await save_data(uid, data)
 
+
 # -------------- PROMOTION -------------- #
 import urllib.parse
 
-TASKS_FILE = "tasks.json"      # file for promo tasks
+TASKS_FILE = "tasks.json"  # file for promo tasks
 _tasks_lock = asyncio.Lock()
 CHECK_INTERVAL_SECONDS = 60 * 10  # background loop check interval
 GRACE_PERIOD = timedelta(hours=24)
 REQUIRED_DAYS = 7
 PRICE_PER_SUB = 1
+
 
 def _read_tasks_sync() -> List[Dict]:
     if not os.path.exists(TASKS_FILE):
@@ -8735,21 +9076,26 @@ def _read_tasks_sync() -> List[Dict]:
     except Exception:
         return []
 
+
 def _write_tasks_sync(tasks: List[Dict]):
     os.makedirs(os.path.dirname(TASKS_FILE) or ".", exist_ok=True)
     with open(TASKS_FILE, "w", encoding="utf-8") as f:
         json.dump(tasks, f, ensure_ascii=False, indent=2)
+
 
 async def init_tasks_file():
     async with _tasks_lock:
         if not os.path.exists(TASKS_FILE):
             await asyncio.to_thread(_write_tasks_sync, [])
 
+
 async def load_tasks() -> List[Dict]:
     return await asyncio.to_thread(_read_tasks_sync)
 
+
 async def save_tasks(tasks: List[Dict]):
     await asyncio.to_thread(_write_tasks_sync, tasks)
+
 
 async def add_task(channel_id: int, owner_id: str, count: int, title: Optional[str] = None) -> Dict:
     if count <= 0:
@@ -8768,6 +9114,7 @@ async def add_task(channel_id: int, owner_id: str, count: int, title: Optional[s
         await save_tasks(tasks)
     return task
 
+
 async def find_task(channel_id: int, created_at: Optional[str] = None) -> Optional[Dict]:
     async with _tasks_lock:
         tasks = await load_tasks()
@@ -8776,6 +9123,7 @@ async def find_task(channel_id: int, created_at: Optional[str] = None) -> Option
                 if created_at is None or t.get("created_at") == created_at:
                     return t
     return None
+
 
 async def decrement_task(channel_id: int, created_at: str) -> Tuple[Optional[Dict], bool]:
     async with _tasks_lock:
@@ -8793,6 +9141,7 @@ async def decrement_task(channel_id: int, created_at: str) -> Tuple[Optional[Dic
                     return t, False
     return None, False
 
+
 async def remove_task_exact(channel_id: int, created_at: str) -> Optional[Dict]:
     async with _tasks_lock:
         tasks = await load_tasks()
@@ -8803,25 +9152,34 @@ async def remove_task_exact(channel_id: int, created_at: str) -> Optional[Dict]:
                 return removed
     return None
 
+
 # ------------------ FSM States ------------------
 class PromoStates(StatesGroup):
     waiting_for_count = State()
+
 
 # ------------------ PROMOTION HANDLERS ------------------
 @dp.message(F.text.lower().in_(["/promotion", "продвижение", "продвигать", "реклама", "/promotion@gmegadbot"]))
 async def cmd_promotion(message: Message):
     if message.chat.type != "private":
-        kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="🍓 Перейти в ЛС", url="t.me/gmegadbot")]]))
-        return await message.reply(f"🍓 {await gsname(message.from_user.first_name, message.from_user.id)}, продвижение доступно только в {html.link("ЛС с ботом", "t.me/gmegadbot")}!",reply_markup=kb, disable_web_page_preview=True)
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=([[InlineKeyboardButton(text="🍓 Перейти в ЛС", url="t.me/gmegadbot")]]))
+        return await message.reply(
+            f"🍓 {await gsname(message.from_user.first_name, message.from_user.id)}, продвижение доступно только в {html.link("ЛС с ботом", "t.me/gmegadbot")}!",
+            reply_markup=kb, disable_web_page_preview=True)
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="📢 Отправить канал", callback_data="promo_add_channel")]
     ])
-    await message.answer("📢 Продвижение: нажмите кнопку и перешлите сообщение из вашего канала (бот должен быть админом).", reply_markup=kb)
+    await message.answer(
+        "📢 Продвижение: нажмите кнопку и перешлите сообщение из вашего канала (бот должен быть админом).",
+        reply_markup=kb)
+
 
 @dp.callback_query(lambda c: c.data == "promo_add_channel")
 async def promo_add_channel_cb(query: CallbackQuery):
     await query.answer()
     await query.message.answer("👉 Перешлите любой пост из своего канала, где бот добавлен как администратор.")
+
 
 @dp.message(lambda m: getattr(m, "forward_from_chat", None) is not None)
 async def handle_forward_from_channel(message: Message, state: FSMContext):
@@ -8852,6 +9210,7 @@ async def handle_forward_from_channel(message: Message, state: FSMContext):
 
     # ---- Ось правильно встановлюємо стан через FSMContext ----
     await state.set_state(PromoStates.waiting_for_count)
+
 
 @dp.message(StateFilter(PromoStates.waiting_for_count))
 async def receive_count_for_promo(message: Message, state: FSMContext):
@@ -8903,18 +9262,21 @@ async def receive_count_for_promo(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(f"✅ Задача создана: <b>{channel_title}</b> — {count} подписок. Списано {cost} GGs.")
 
+
 # ------------------ EARN HANDLERS ------------------
 import urllib.parse
 from math import ceil
 
 PAGE_SIZE = 5  # кількість задач на сторінку
 
+
 @dp.message(F.text.lower().in_(["/earn", "заработать", "заработок", "/earn@gmegadbot"]))
 async def cmd_earn(message: Message):
     if message.chat.type != "private":
-        kb = InlineKeyboardMarkup(inline_keyboard=([[InlineKeyboardButton(text="🍓 Перейти в ЛС", url="t.me/gmegadbot")]]))
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=([[InlineKeyboardButton(text="🍓 Перейти в ЛС", url="t.me/gmegadbot")]]))
         return await message.reply(
-            f"🍓 {await gsname(message.from_user.first_name, message.from_user.id)}, заработок доступен только в {html.link('ЛС с ботом','t.me/gmegadbot')}!",
+            f"🍓 {await gsname(message.from_user.first_name, message.from_user.id)}, заработок доступен только в {html.link('ЛС с ботом', 't.me/gmegadbot')}!",
             reply_markup=kb, disable_web_page_preview=True
         )
 
@@ -8937,7 +9299,8 @@ async def cmd_earn(message: Message):
     await send_earn_page(message.chat.id, available, page, last_page)
 
 
-async def send_earn_page(chat_id: int | str, available: list, page: int, last_page: int, edit_message: Message | None = None):
+async def send_earn_page(chat_id: int | str, available: list, page: int, last_page: int,
+                         edit_message: Message | None = None):
     """
     Формує і відправляє (або редагує) сторінку з доступними задачами.
     Якщо edit_message задано — редагуємо його, інакше — відправляємо нове.
@@ -8993,9 +9356,9 @@ async def send_earn_page(chat_id: int | str, available: list, page: int, last_pa
     # Навігація
     nav_row = []
     if page > 1:
-        nav_row.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"earn_page:{page-1}"))
+        nav_row.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"earn_page:{page - 1}"))
     if last_page > 1 and page < last_page:
-        nav_row.append(InlineKeyboardButton(text="Дальше ➡️", callback_data=f"earn_page:{page+1}"))
+        nav_row.append(InlineKeyboardButton(text="Дальше ➡️", callback_data=f"earn_page:{page + 1}"))
     if nav_row:
         kb_rows.append(nav_row)
 
@@ -9044,6 +9407,7 @@ async def handle_earn_close(callback: CallbackQuery):
             pass
     await callback.answer()
 
+
 @dp.callback_query(lambda c: c.data and c.data.startswith("check_sub:"))
 @flood_protect(min_delay=0.5)
 async def cb_check_sub(callback: CallbackQuery):
@@ -9069,7 +9433,8 @@ async def cb_check_sub(callback: CallbackQuery):
             return await callback.message.answer("❗ Канал не найден или он приватный. Невозможно проверить подписку.")
         except BadRequest as e:
             # Например: "USER_ID_INVALID" или "CHAT_ADMIN_REQUIRED" и т.п.
-            return await callback.message.answer("❗ Не удалось проверить — бот не имеет доступа к информации по этому каналу.")
+            return await callback.message.answer(
+                "❗ Не удалось проверить — бот не имеет доступа к информации по этому каналу.")
         except Unauthorized:
             return await callback.message.answer("❗ Бот не имеет доступа к этому каналу.")
         except RetryAfter as e:
@@ -9078,7 +9443,8 @@ async def cb_check_sub(callback: CallbackQuery):
             return
         except Exception as e:
 
-            return await callback.message.answer("⚠ Не удалось проверить подписку (ошибка API). Попробуйте снова позже.")
+            return await callback.message.answer(
+                "⚠ Не удалось проверить подписку (ошибка API). Попробуйте снова позже.")
 
         status = getattr(member, "status", None)
         if status in ("member", "administrator", "creator"):
@@ -9087,7 +9453,8 @@ async def cb_check_sub(callback: CallbackQuery):
             now = datetime.utcnow()
 
             if subs.get(sub_key, {}).get("active"):
-                return await callback.message.answer("Вы уже выполняли это задание или у вас уже активная подписка на этот канал.")
+                return await callback.message.answer(
+                    "Вы уже выполняли это задание или у вас уже активная подписка на этот канал.")
 
             user["GGs"] = user.get("GGs", 0) + PRICE_PER_SUB
             subs[sub_key] = {
@@ -9103,7 +9470,8 @@ async def cb_check_sub(callback: CallbackQuery):
             if deleted:
                 owner_id = removed_or_updated.get("owner")
                 try:
-                    await bot.send_message(int(owner_id), f"✅ Ваша задача для каналу <b>{removed_or_updated.get('title')}</b> выполнена и удалена.")
+                    await bot.send_message(int(owner_id),
+                                           f"✅ Ваша задача для каналу <b>{removed_or_updated.get('title')}</b> выполнена и удалена.")
                 except Exception:
                     pass
             else:
@@ -9115,7 +9483,8 @@ async def cb_check_sub(callback: CallbackQuery):
                     except Exception:
                         pass
 
-            await callback.message.answer(f"🎉 Подписка подтверждена! +{PRICE_PER_SUB} GGs. Не отписывайтесь в течение {REQUIRED_DAYS} дней.")
+            await callback.message.answer(
+                f"🎉 Подписка подтверждена! +{PRICE_PER_SUB} GGs. Не отписывайтесь в течение {REQUIRED_DAYS} дней.")
         else:
             return await callback.message.answer("❗ Вы не подписаны на канал.")
     except Exception:
@@ -9209,7 +9578,8 @@ async def check_subscriptions_loop():
                                 subs[ch_id]["grace_until"] = (now + GRACE_PERIOD).isoformat()
                                 user_changed = True
                                 try:
-                                    await bot.send_message(int(user_id), f"⚠ Вы отписались от канала {ch_id}. У вас есть 24 часа, чтобы вернуться, иначе вы будете заблокированы в системе заработка.")
+                                    await bot.send_message(int(user_id),
+                                                           f"⚠ Вы отписались от канала {ch_id}. У вас есть 24 часа, чтобы вернуться, иначе вы будете заблокированы в системе заработка.")
                                 except Exception:
                                     pass
                             else:
@@ -9222,7 +9592,8 @@ async def check_subscriptions_loop():
                                     user["earn_ban"] = True
                                     user_changed = True
                                     try:
-                                        await bot.send_message(int(user_id), "🚫 Вы заблокированы в системе заработка за отписку и невозвращение в течение 24 часов.")
+                                        await bot.send_message(int(user_id),
+                                                               "🚫 Вы заблокированы в системе заработка за отписку и невозвращение в течение 24 часов.")
                                     except Exception:
                                         pass
                                     for kk in list(subs.keys()):
@@ -9233,6 +9604,7 @@ async def check_subscriptions_loop():
         except Exception as e:
             print("Error in subscription checker:", e)
         await asyncio.sleep(CHECK_INTERVAL_SECONDS)
+
 
 def format_duration(future_dt: datetime) -> str:
     """
@@ -9254,6 +9626,7 @@ def format_duration(future_dt: datetime) -> str:
         parts.append(f"{minutes}м")
     return " ".join(parts) if parts else "меньше минуты"
 
+
 # ---------------- SHOP ----------------
 
 @dp.message(F.text.in_(["/shop", "магаз", "магазин", "шоп", "маркет"]))
@@ -9271,6 +9644,7 @@ async def handle_shop_command(msg: Message):
         f"🛍 {await gsname(name, user_id)}, ты в магазине!\n\nВыбери раздел:",
         reply_markup=kb.as_markup()
     )
+
 
 @dp.callback_query(F.data.startswith("shop_callback"))
 async def handle_shop_command(query: CallbackQuery):
@@ -9292,7 +9666,6 @@ async def handle_shop_command(query: CallbackQuery):
         f"🛍 {await gsname(name, user_id)}, ты в магазине!\n\nВыбери раздел:",
         reply_markup=kb.as_markup()
     )
-
 
 
 @dp.callback_query(F.data.startswith("shop_statuses_view"))
@@ -9321,6 +9694,7 @@ async def handle_view_shop_statuses(query: CallbackQuery):
         f"{await gsname(name, user_id)}, доступные для покупки статусы:\n{statuses_line}",
         reply_markup=kb.as_markup()
     )
+
 
 @dp.callback_query(F.data.startswith("statuses_view"))
 async def handle_view_shop_statuses(query: CallbackQuery):
@@ -9357,24 +9731,33 @@ async def handle_view_shop_statuses(query: CallbackQuery):
 
     kb = None
     if price_type == "m" and int_price < data["coins"]:
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"💸 Купить {BUYABLE_STATUSES[status_id]}", callback_data=f"sbuy_status:{status_id}:{user_id}")], [InlineKeyboardButton(text="Назад", callback_data=f"shop_statuses_view:{user_id}")]])
+        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"💸 Купить {BUYABLE_STATUSES[status_id]}",
+                                                                         callback_data=f"sbuy_status:{status_id}:{user_id}")],
+                                                   [InlineKeyboardButton(text="Назад",
+                                                                         callback_data=f"shop_statuses_view:{user_id}")]])
     elif price_type == "s":
         kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=f"💸 Купить {BUYABLE_STATUSES[status_id]}",
                                                                          callback_data=f"buy_status:{status_id}:{user_id}")],
                                                    [InlineKeyboardButton(text="Назад",
                                                                          callback_data=f"shop_statuses_view:{user_id}")]])
     else:
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data=f"shop_statuses_view:{user_id}")]])
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data=f"shop_statuses_view:{user_id}")]])
 
+    await query.message.edit_text(
+        f"🔗 {await gsname(name, user_id)}, информация про статус \"{BUYABLE_STATUSES[status_id]}\":\n"
+        f"\n💰 Цена: {price}\n"
+        f"{"\nДанный статус из лимитированной коллекции!" if price_type == "l" else ""}", reply_markup=kb)
 
-    await query.message.edit_text(f"🔗 {await gsname(name, user_id)}, информация про статус \"{BUYABLE_STATUSES[status_id]}\":\n"
-                                  f"\n💰 Цена: {price}\n"
-                                  f"{"\nДанный статус из лимитированной коллекции!" if price_type == "l" else ""}", reply_markup=kb)
 
 def get_buy_kb(id: int, handler_balance: str, handler_card: str):
-    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💰 С баланса", callback_data=f"{handler_balance}:{id}")], [InlineKeyboardButton(text="💳 С карты", callback_data=f"{handler_card}:{id}")]])
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="💰 С баланса", callback_data=f"{handler_balance}:{id}")],
+                         [InlineKeyboardButton(text="💳 С карты", callback_data=f"{handler_card}:{id}")]])
+
 
 PAY_TEXT = "⭐️ Выбери способ оплаты:"
+
 
 @dp.callback_query(F.data.startswith("sbuy_status"))
 async def buy_status_choose(cq: CallbackQuery):
@@ -9405,8 +9788,11 @@ async def buy_status_choose(cq: CallbackQuery):
         await create_user_data(user_id)
         data = await load_data(user_id)
 
-    await cq.message.edit_text(f"{PAY_TEXT}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="💰 С баланса", callback_data=f"buy_status_wb:{status_id}:{user_id}")], [InlineKeyboardButton(text="💳 С карты", callback_data=f"buy_status_wc:"
-                                                                                                                                                                                                                                                         f"{status_id}:{user_id}")]]))
+    await cq.message.edit_text(f"{PAY_TEXT}", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="💰 С баланса", callback_data=f"buy_status_wb:{status_id}:{user_id}")],
+        [InlineKeyboardButton(text="💳 С карты", callback_data=f"buy_status_wc:"
+                                                              f"{status_id}:{user_id}")]]))
+
 
 @dp.callback_query(F.data.startswith("buy_status_wb"))
 async def handle_buy_status_coins(query: CallbackQuery):
@@ -9440,14 +9826,17 @@ async def handle_buy_status_coins(query: CallbackQuery):
     if price_type == "m":
         # миттєва покупка (mDrops)
         if data.get("coins", 0) < int_price:
-            kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data=f"shop_statuses_view:{user_id}")]])
-            return await query.message.edit_text(f"{await gsname(name, user_id)}, тебе не хватает mDrops для покупки этого статуса", reply_markup=kb)
+            kb = InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text="Назад", callback_data=f"shop_statuses_view:{user_id}")]])
+            return await query.message.edit_text(
+                f"{await gsname(name, user_id)}, тебе не хватает mDrops для покупки этого статуса", reply_markup=kb)
         data["coins"] = data.get("coins", 0) - int_price
         data["status"] = status_id + len(STATUSES) - len(BUYABLE_STATUSES)
         await save_data(user_id, data)
         await query.message.edit_text(
             f"{await gsname(name, user_id)}, ти купил статус \"{BUYABLE_STATUSES[status_id]}\" за {format_balance(int_price)} mDrops!",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="В Магазин", callback_data=f"shop_callback:{user_id}")]])
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text="В Магазин", callback_data=f"shop_callback:{user_id}")]])
         )
         return
 
@@ -9515,7 +9904,8 @@ async def handle_buy_status_card(query: CallbackQuery):
         await save_data(user_id, data)
         await query.message.edit_text(
             f"{await gsname(name, user_id)}, ти купил статус \"{BUYABLE_STATUSES[status_id]}\" за {format_balance(int_price)} mDrops!",
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="В Магазин", callback_data=f"shop_callback:{user_id}")]])
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text="В Магазин", callback_data=f"shop_callback:{user_id}")]])
         )
         return
 
@@ -9570,7 +9960,9 @@ async def handle_successful_payment(message: Message):
             payload_price = int(parts[3])
         except Exception:
             # некоректний payload
-            await message.reply("Ошибка обработки оплаты (payload). Свяжитесь с админом.", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Написать админу", url="t.me/sollamon")]]))
+            await message.reply("Ошибка обработки оплаты (payload). Свяжитесь с админом.",
+                                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                    [InlineKeyboardButton(text="Написать админу", url="t.me/sollamon")]]))
             return
 
         # Переконаємось, що платник - це той самий user_id (іноді можна порівняти id)
@@ -9622,9 +10014,11 @@ LEVEL_PAYOUT = {
     5: 500_000,
 }
 
+
 # ====== FSM ======
 class PartnerApproveStates(StatesGroup):
     waiting_for_subs = State()
+
 
 class PartnerCreateStates(StatesGroup):
     waiting_for_channel_link = State()
@@ -9663,6 +10057,7 @@ def load_pending():
 def save_pending(data) -> None:
     save_json(PENDING_FILE, data)
 
+
 # ====== Логика уровня по подписчикам ======
 
 def subs_to_level(subs: int) -> int:
@@ -9675,6 +10070,7 @@ def subs_to_level(subs: int) -> int:
     if 501 <= subs <= 1000:
         return 4
     return 5
+
 
 # ====== Хелперы поиска контрактов ======
 def find_contract_by_owner(owner_id: int) -> Tuple[Optional[str], Optional[dict]]:
@@ -9698,11 +10094,13 @@ def find_contract_by_id(contract_id: int) -> Tuple[Optional[str], Optional[dict]
             continue
     return None, None
 
+
 # ====== Генерация 7-символьного кода ======
 def gen_verify_code(length: int = 7) -> str:
     import string
     alphabet = string.ascii_uppercase + string.digits
     return ''.join(random.choice(alphabet) for _ in range(length))
+
 
 # ====== Хендлеры партнерки ======
 
@@ -9726,7 +10124,8 @@ async def handle_partners_program(msg: Message):
 
     if msg.chat.type != "private":
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🍓 Перейти в ЛС", url=f"https://t.me/{BOT_USERNAME}" if BOT_USERNAME else "https://t.me/yourbot")]
+            [InlineKeyboardButton(text="🍓 Перейти в ЛС",
+                                  url=f"https://t.me/{BOT_USERNAME}" if BOT_USERNAME else "https://t.me/yourbot")]
         ])
         return await msg.reply(
             f"🍓 {await gsname(name, user_id)}, команда доступна только в ЛС с ботом!",
@@ -9741,8 +10140,10 @@ async def handle_partners_program(msg: Message):
         subs = user_contract.get("subs", 0)
         link = user_contract.get("link", "—")
         kb = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="Получить выплату", callback_data=f"partners_claim:{user_contract.get('id')}:{user_id}")],
-            [InlineKeyboardButton(text="Удалить контракт", callback_data=f"partners_delete:{user_contract.get('id')}:{user_id}")]
+            [InlineKeyboardButton(text="Получить выплату",
+                                  callback_data=f"partners_claim:{user_contract.get('id')}:{user_id}")],
+            [InlineKeyboardButton(text="Удалить контракт",
+                                  callback_data=f"partners_delete:{user_contract.get('id')}:{user_id}")]
         ])
         await msg.answer(
             f"📄 Ваш контракт:\n\n🔗 Канал: {link}\n👤 Владелец: {user_id}\n📈 Подписчиков: {subs}\n🏷 Уровень: {level}\n⏱️ Последняя выплата: {last_dt}",
@@ -9757,7 +10158,8 @@ async def handle_partners_program(msg: Message):
         return
 
     # Показываем кнопку "Создать контракт"
-    kb_inline = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Создать контракт", callback_data=f"partners_create:{user_id}")]])
+    kb_inline = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Создать контракт", callback_data=f"partners_create:{user_id}")]])
     await msg.answer(
         f"🤝 {await gsname(name, user_id)}, вы можете создать партнёрский контракт.\n\nНажмите кнопку 'Создать контракт' и следуйте инструкциям.",
         reply_markup=kb_inline
@@ -9786,7 +10188,8 @@ async def partners_create_cb(query: CallbackQuery, state: FSMContext):
 
     await state.set_state(PartnerCreateStates.waiting_for_channel_link)
     await state.update_data(requester_id=requester_id)
-    await query.message.answer("Отлично! Введите, пожалуйста, ссылку на канал (например: https://t.me/yourchannel или @yourchannel).")
+    await query.message.answer(
+        "Отлично! Введите, пожалуйста, ссылку на канал (например: https://t.me/yourchannel или @yourchannel).")
 
 
 # ====== Пользователь отправил ссылку на канал (в state waiting_for_channel_link) ======
@@ -9815,14 +10218,16 @@ async def user_sent_channel_link(msg: Message, state: FSMContext):
     elif link.startswith("http://") or link.startswith("https://"):
         # принимаем как есть, но нормализуем до https://t.me/...
         if "t.me/" not in link:
-            await msg.reply("Похоже это не ссылка на Telegram-канал. Убедитесь, что ссылка вида https://t.me/yourchannel или @yourchannel.")
+            await msg.reply(
+                "Похоже это не ссылка на Telegram-канал. Убедитесь, что ссылка вида https://t.me/yourchannel или @yourchannel.")
             return
     else:
         # возможно просто username без @
         if "/" not in link and "." not in link:
             link = f"https://t.me/{link}"
         else:
-            await msg.reply("Похоже это не ссылка на Telegram-канал. Убедитесь, что ссылка вида https://t.me/yourchannel или @yourchannel.")
+            await msg.reply(
+                "Похоже это не ссылка на Telegram-канал. Убедитесь, что ссылка вида https://t.me/yourchannel или @yourchannel.")
             return
 
     # Создаём код и сохраняем pending
@@ -9838,7 +10243,8 @@ async def user_sent_channel_link(msg: Message, state: FSMContext):
 
     # Пишем пользователю инструкции
     kb_confirm = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Подтвердить размещение кода", callback_data=f"partners_user_confirm:{requester_id}")],
+        [InlineKeyboardButton(text="Подтвердить размещение кода",
+                              callback_data=f"partners_user_confirm:{requester_id}")],
         [InlineKeyboardButton(text="Отменить заявку", callback_data=f"partners_user_cancel:{requester_id}")]
     ])
     await msg.reply(
@@ -9874,7 +10280,8 @@ async def partners_user_confirm_cb(query: CallbackQuery):
 
     # Отправляем админу ссылку и код (админ сам проверяет наличие кода в описании)
     kb_admin = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Ввести количество подписчиков", callback_data=f"partners_admin_enter_subs:{requester_id}:0")],
+        [InlineKeyboardButton(text="Ввести количество подписчиков",
+                              callback_data=f"partners_admin_enter_subs:{requester_id}:0")],
         [InlineKeyboardButton(text="Отклонить", callback_data=f"partners_admin_reject:{requester_id}:0")]
     ])
     try:
@@ -9926,7 +10333,8 @@ async def admin_enter_subs_cb(query: CallbackQuery, state: FSMContext):
     channel_link = p.get("channel_link")
 
     # Сообщаем админу ссылку (текст) и просим ввести число подписчиков
-    await query.message.edit_text(f"Введите, пожалуйста, количество подписчиков для заявителя (id: {requester_id}).\nКанал: {channel_link}")
+    await query.message.edit_text(
+        f"Введите, пожалуйста, количество подписчиков для заявителя (id: {requester_id}).\nКанал: {channel_link}")
     await state.set_state(PartnerApproveStates.waiting_for_subs)
     await state.update_data(requester_id=requester_id)
 
@@ -10049,11 +10457,13 @@ async def admin_finish_cb(query: CallbackQuery):
     })
 
     try:
-        await bot.send_message(requester_id, f"✅ Ваша партнёрская заявка подтверждена!\nКанал: {link}\nПодписчиков: {subs}\nУровень: {level}\nВы можете получать выплаты раз в 24 часа командой /partners -> Получить выплату.")
+        await bot.send_message(requester_id,
+                               f"✅ Ваша партнёрская заявка подтверждена!\nКанал: {link}\nПодписчиков: {subs}\nУровень: {level}\nВы можете получать выплаты раз в 24 часа командой /partners -> Получить выплату.")
     except Exception:
         pass
 
-    await query.message.edit_text(f"Контракт создан для {requester_id}.\nКанал: {link}\nПодписчиков: {subs}\nУровень: {level}")
+    await query.message.edit_text(
+        f"Контракт создан для {requester_id}.\nКанал: {link}\nПодписчиков: {subs}\nУровень: {level}")
 
 
 # ====== Владелец: получить выплату ======
@@ -10107,7 +10517,8 @@ async def partners_claim_cb(query: CallbackQuery):
 
     await query.answer(f"Выплата выполнена: {payout} mDrops.", show_alert=True)
     try:
-        await bot.send_message(requester_id, f"✅ Вы получили {payout} mDrops за партнёрскую программу (уровень {level}).")
+        await bot.send_message(requester_id,
+                               f"✅ Вы получили {payout} mDrops за партнёрскую программу (уровень {level}).")
     except Exception:
         pass
 
@@ -10154,8 +10565,10 @@ async def partners_delete_cb(query: CallbackQuery):
     else:
         await query.answer("Контракт не найден.", show_alert=True)
 
+
 _CARDS_TABLE = "cards"
 _TX_TABLE = "card_transactions"
+
 
 # ----------------- Вспомогательные функции -----------------
 
@@ -10282,25 +10695,32 @@ def _ensure_db_schema():
         """)
         conn.commit()
 
+
 def _gen_card_number() -> str:
     """Сгенерировать уникальный 16-значный номер карты (без Luhn)."""
     # Prefix 4000... to look like Visa; гарантируем уникальность при сохранении.
     return "4000" + "".join(str(random.randint(0, 9)) for _ in range(12))
 
+
 def _hash_pin(pin: str) -> str:
     return hashlib.sha256(pin.encode("utf-8")).hexdigest()
 
-def _record_tx_sync(card_number: str, typ: str, amount: float, other: Optional[str], initiator_id: Optional[str], note: Optional[str]):
+
+def _record_tx_sync(card_number: str, typ: str, amount: float, other: Optional[str], initiator_id: Optional[str],
+                    note: Optional[str]):
     ts = int(time.time())
     with sqlite3.connect(DB_PATH) as conn:
         cur = conn.cursor()
-        cur.execute(f"INSERT INTO {_TX_TABLE} (card_number, ts, type, amount, other, initiator_id, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (card_number, ts, typ, float(amount), other, initiator_id, note))
+        cur.execute(
+            f"INSERT INTO {_TX_TABLE} (card_number, ts, type, amount, other, initiator_id, note) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (card_number, ts, typ, float(amount), other, initiator_id, note))
         conn.commit()
+
 
 # ----------------- Синхронные операции (sqlite) -----------------
 
-def sync_create_card(owner_id: str, name: str = "", initial_balance: float = 0.0, pin: Optional[str] = None, metadata: Optional[dict] = None) -> str:
+def sync_create_card(owner_id: str, name: str = "", initial_balance: float = 0.0, pin: Optional[str] = None,
+                     metadata: Optional[dict] = None) -> str:
     """Создать карту синхронно и вернуть card_number."""
     _ensure_db_schema()
     card_number = _gen_card_number()
@@ -10320,8 +10740,9 @@ def sync_create_card(owner_id: str, name: str = "", initial_balance: float = 0.0
         pin_hash = _hash_pin(pin) if pin else None
         created_at = datetime.utcnow().isoformat()
         md = json.dumps(metadata or {}, ensure_ascii=False)
-        cur.execute(f"INSERT INTO {_CARDS_TABLE} (card_number, owner_id, name, balance, blocked, pin_hash, created_at, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    (card_number, str(owner_id), name or "", float(initial_balance), 0, pin_hash, created_at, md))
+        cur.execute(
+            f"INSERT INTO {_CARDS_TABLE} (card_number, owner_id, name, balance, blocked, pin_hash, created_at, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (card_number, str(owner_id), name or "", float(initial_balance), 0, pin_hash, created_at, md))
         conn.commit()
     # записываем транзакцию "создание/пополнение"
     if initial_balance:
@@ -10329,6 +10750,7 @@ def sync_create_card(owner_id: str, name: str = "", initial_balance: float = 0.0
     else:
         _record_tx_sync(card_number, "create", 0.0, None, owner_id, "card created")
     return card_number
+
 
 def sync_get_card(card_number: str) -> Dict[str, Any]:
     """Вернуть запись карты или {}"""
@@ -10350,19 +10772,24 @@ def sync_get_card(card_number: str) -> Dict[str, Any]:
         d["blocked"] = bool(int(d.get("blocked", 0)))
         return d
 
+
 def sync_update_card_balance(card_number: str, new_balance: float):
     _ensure_db_schema()
     with sqlite3.connect(DB_PATH) as conn:
         cur = conn.cursor()
-        cur.execute(f"UPDATE {_CARDS_TABLE} SET balance = ? WHERE card_number = ?", (float(new_balance), str(card_number)))
+        cur.execute(f"UPDATE {_CARDS_TABLE} SET balance = ? WHERE card_number = ?",
+                    (float(new_balance), str(card_number)))
         conn.commit()
+
 
 def sync_set_card_block(card_number: str, blocked: bool):
     _ensure_db_schema()
     with sqlite3.connect(DB_PATH) as conn:
         cur = conn.cursor()
-        cur.execute(f"UPDATE {_CARDS_TABLE} SET blocked = ? WHERE card_number = ?", (1 if blocked else 0, str(card_number)))
+        cur.execute(f"UPDATE {_CARDS_TABLE} SET blocked = ? WHERE card_number = ?",
+                    (1 if blocked else 0, str(card_number)))
         conn.commit()
+
 
 def sync_set_pin(card_number: str, pin: Optional[str]):
     ph = _hash_pin(pin) if pin else None
@@ -10370,6 +10797,7 @@ def sync_set_pin(card_number: str, pin: Optional[str]):
         cur = conn.cursor()
         cur.execute(f"UPDATE {_CARDS_TABLE} SET pin_hash = ? WHERE card_number = ?", (ph, str(card_number)))
         conn.commit()
+
 
 def sync_list_cards_by_owner(owner_id: str) -> Dict[str, Dict[str, Any]]:
     _ensure_db_schema()
@@ -10389,6 +10817,7 @@ def sync_list_cards_by_owner(owner_id: str) -> Dict[str, Dict[str, Any]]:
             out[str(d["card_number"])] = d
     return out
 
+
 def sync_delete_card(card_number: str) -> bool:
     _ensure_db_schema()
     with sqlite3.connect(DB_PATH) as conn:
@@ -10402,16 +10831,20 @@ def sync_delete_card(card_number: str) -> bool:
         _record_tx_sync(card_number, "delete", 0.0, None, None, "card deleted")
         return True
 
-def sync_record_tx(card_number: str, typ: str, amount: float, other: Optional[str], initiator_id: Optional[str], note: Optional[str]):
+
+def sync_record_tx(card_number: str, typ: str, amount: float, other: Optional[str], initiator_id: Optional[str],
+                   note: Optional[str]):
     _ensure_db_schema()
     _record_tx_sync(card_number, typ, amount, other, initiator_id, note)
+
 
 def sync_get_tx_history(card_number: str, limit: int = 50) -> List[Dict[str, Any]]:
     _ensure_db_schema()
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         cur = conn.cursor()
-        cur.execute(f"SELECT * FROM {_TX_TABLE} WHERE card_number = ? ORDER BY id DESC LIMIT ?", (str(card_number), limit))
+        cur.execute(f"SELECT * FROM {_TX_TABLE} WHERE card_number = ? ORDER BY id DESC LIMIT ?",
+                    (str(card_number), limit))
         rows = cur.fetchall()
         out = []
         for r in rows:
@@ -10419,9 +10852,11 @@ def sync_get_tx_history(card_number: str, limit: int = 50) -> List[Dict[str, Any
             out.append(d)
         return out
 
+
 # ----------------- Асинхронные обёртки -----------------
 
-async def create_card(owner_id: str, name: str = "", initial_balance: float = 0.0, pin: Optional[str] = None, metadata: Optional[dict] = None) -> str:
+async def create_card(owner_id: str, name: str = "", initial_balance: float = 0.0, pin: Optional[str] = None,
+                      metadata: Optional[dict] = None) -> str:
     """
     Создать карту для пользователя owner_id.
     Ограничение: у пользователя может быть не более 1 карты.
@@ -10439,29 +10874,39 @@ async def create_card(owner_id: str, name: str = "", initial_balance: float = 0.
     card_number = await asyncio.to_thread(sync_create_card, owner_id, name, float(initial_balance), pin, metadata)
     return str(card_number)
 
+
 async def get_card(card_number: str) -> Dict[str, Any]:
     return await asyncio.to_thread(sync_get_card, str(card_number))
+
 
 async def update_card_balance(card_number: str, new_balance: float):
     return await asyncio.to_thread(sync_update_card_balance, str(card_number), float(new_balance))
 
+
 async def set_card_block(card_number: str, blocked: bool):
     return await asyncio.to_thread(sync_set_card_block, str(card_number), bool(blocked))
+
 
 async def set_card_pin(card_number: str, pin: Optional[str]):
     return await asyncio.to_thread(sync_set_pin, str(card_number), pin)
 
+
 async def list_cards_by_owner(owner_id: str) -> Dict[str, Dict[str, Any]]:
     return await asyncio.to_thread(sync_list_cards_by_owner, str(owner_id))
+
 
 async def delete_card(card_number: str) -> bool:
     return await asyncio.to_thread(sync_delete_card, str(card_number))
 
-async def record_tx(card_number: str, typ: str, amount: float, other: Optional[str], initiator_id: Optional[str], note: Optional[str]):
+
+async def record_tx(card_number: str, typ: str, amount: float, other: Optional[str], initiator_id: Optional[str],
+                    note: Optional[str]):
     return await asyncio.to_thread(sync_record_tx, str(card_number), typ, float(amount), other, initiator_id, note)
+
 
 async def get_tx_history(card_number: str, limit: int = 50):
     return await asyncio.to_thread(sync_get_tx_history, str(card_number), int(limit))
+
 
 # ----------------- Высокоуровневые банковские операции -----------------
 
@@ -10503,6 +10948,7 @@ async def topup_card_from_balance(user_id: str, card_number: str, amount: float)
 
     return True, f"Карта {card_number} пополнена на {amt} mDrops"
 
+
 async def withdraw_card_to_balance(user_id: str, card_number: str, amount: float) -> Tuple[bool, str]:
     """
     Снятие с карты на основной баланс (владелец карты).
@@ -10542,9 +10988,12 @@ async def withdraw_card_to_balance(user_id: str, card_number: str, amount: float
     await record_tx(card_number, "withdraw_to_balance", -amt, None, user_id, "withdraw to main balance")
     return True, f"С карты {card_number} снято {amt} mDrops и зачислено на основной баланс"
 
+
 from typing import Optional, Tuple
 
-async def pay_with_card(owner_id: str, amount: float, pin: Optional[str] = None, require_pin: bool = False, note: Optional[str] = None) -> Tuple[bool, str]:
+
+async def pay_with_card(owner_id: str, amount: float, pin: Optional[str] = None, require_pin: bool = False,
+                        note: Optional[str] = None) -> Tuple[bool, str]:
     """
     Оплата картой владельца (owner_id).
     Ограничение: у пользователя максимум одна карта.
@@ -10558,10 +11007,12 @@ async def pay_with_card(owner_id: str, amount: float, pin: Optional[str] = None,
     try:
         amt = float(amount)
     except Exception:
-        append_log({"event": "pay_with_card_invalid_amount", "owner_id": str(owner_id), "amount": amount}, add_timestamp=True)
+        append_log({"event": "pay_with_card_invalid_amount", "owner_id": str(owner_id), "amount": amount},
+                   add_timestamp=True)
         return False, "Неверная сумма"
     if amt <= 0:
-        append_log({"event": "pay_with_card_nonpositive_amount", "owner_id": str(owner_id), "amount": amt}, add_timestamp=True)
+        append_log({"event": "pay_with_card_nonpositive_amount", "owner_id": str(owner_id), "amount": amt},
+                   add_timestamp=True)
         return False, "Сумма должна быть положительной"
 
     owner_id = str(owner_id)
@@ -10626,7 +11077,9 @@ async def pay_with_card(owner_id: str, amount: float, pin: Optional[str] = None,
         return False, "Ошибка при получении данных карты"
 
     if not card:
-        append_log({"event": "pay_with_card_card_not_found", "owner_id": owner_id, "card_number": card_number, "amount": amt}, add_timestamp=True)
+        append_log(
+            {"event": "pay_with_card_card_not_found", "owner_id": owner_id, "card_number": card_number, "amount": amt},
+            add_timestamp=True)
         return False, "Карта не найдена"
 
     # Подготовим лог-объект базовый
@@ -10659,7 +11112,8 @@ async def pay_with_card(owner_id: str, amount: float, pin: Optional[str] = None,
                 append_log({**base_log, "result": "fail", "reason": "неверный PIN"}, add_timestamp=True)
                 return False, "Неверный PIN"
         except Exception as exc:
-            append_log({**base_log, "result": "error", "reason": "ошибка проверки PIN", "error": repr(exc)}, add_timestamp=True)
+            append_log({**base_log, "result": "error", "reason": "ошибка проверки PIN", "error": repr(exc)},
+                       add_timestamp=True)
             return False, "Ошибка проверки PIN"
 
     # проверка баланса
@@ -10717,7 +11171,9 @@ async def pay_with_card(owner_id: str, amount: float, pin: Optional[str] = None,
     success_msg = f"Оплата картой {masked} на сумму {disp} mDrops выполнена"
     return True, success_msg
 
-async def transfer_card_to_card(from_user_id: str, from_card_number: str, to_card_number: str, amount: float, pin: Optional[str] = None) -> Tuple[bool, str]:
+
+async def transfer_card_to_card(from_user_id: str, from_card_number: str, to_card_number: str, amount: float,
+                                pin: Optional[str] = None) -> Tuple[bool, str]:
     """
     Перевод с карты на карту по номеру. Если переводит не владелец карты — требуется PIN.
     """
@@ -10758,9 +11214,12 @@ async def transfer_card_to_card(from_user_id: str, from_card_number: str, to_car
     await update_card_balance(from_card_number, new_from_balance)
     await update_card_balance(to_card_number, new_to_balance)
 
-    await record_tx(from_card_number, "transfer_out", -amt, to_card_number, str(from_user_id), f"transfer to {to_card_number}")
-    await record_tx(to_card_number, "transfer_in", amt, from_card_number, str(from_user_id), f"received from {from_card_number}")
+    await record_tx(from_card_number, "transfer_out", -amt, to_card_number, str(from_user_id),
+                    f"transfer to {to_card_number}")
+    await record_tx(to_card_number, "transfer_in", amt, from_card_number, str(from_user_id),
+                    f"received from {from_card_number}")
     return True, f"Перевод {amt} mDrops с {from_card_number} на {to_card_number} выполнен"
+
 
 # ----------------- Утилиты для интеграции -----------------
 
@@ -10777,11 +11236,13 @@ async def try_pay_with_preferred_card(user_id: str, amount: float, note: Optiona
         return False, "Нет дефолтной карты"
     return await pay_with_card(user_id, default_card, amount, require_pin=False, note=note)
 
+
 # ----------------- Хендлеры (примерные, можно адаптировать) -----------------
 # Ниже — несколько готовых обработчиков команд/кнопок: /cards, создание, пополнение, снятие, перевод, просмотр карты, блокировка.
 
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+
 
 # Простые FSM состояния для операций (локально)
 class CardStates(StatesGroup):
@@ -10794,16 +11255,21 @@ class CardStates(StatesGroup):
     transfer_amount = State()
     set_pin = State()
 
+
 # /mycards - список карт пользователя
 @dp.message(F.text.lower().in_(["карта", "банк"]))
 async def cmd_my_cards(message: Message):
     if message.chat.type != "private":
-        return await message.reply(f"🍓 {await gsname(message.from_user.first_name, message.from_user.id)}, карта дотупка только в ЛС с ботом!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="👉 Перйти в лс", url="t.me/gmegadbot")]]))
+        return await message.reply(
+            f"🍓 {await gsname(message.from_user.first_name, message.from_user.id)}, карта дотупка только в ЛС с ботом!",
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text="👉 Перйти в лс", url="t.me/gmegadbot")]]))
 
     uid = str(message.from_user.id)
     cards = await list_cards_by_owner(uid)
     if not cards:
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="➕ Создать карту", callback_data="card_create")]])
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="➕ Создать карту", callback_data="card_create")]])
         return await message.answer("У вас нет карт.", reply_markup=kb)
     lines = []
     kb_rows = []
@@ -10825,6 +11291,7 @@ async def cb_card_create_start(query: CallbackQuery, state: FSMContext):
     await state.set_state(CardStates.creating_card_name)
     await query.message.edit_text("🔰 Введите название карты (пример: Основная, Для донатов) или 'отмена'")
 
+
 @dp.message(CardStates.creating_card_name)
 async def cb_card_create_name(msg: Message, state: FSMContext):
     if (msg.text or "").strip().lower() == "отмена":
@@ -10834,6 +11301,7 @@ async def cb_card_create_name(msg: Message, state: FSMContext):
     await state.update_data(card_name=name)
     await state.set_state(CardStates.creating_card_initial)
     await msg.reply("💰 Укажите начальный баланс карты (деньги пополнятся с вашего баланса) или \"0\"")
+
 
 @dp.message(CardStates.creating_card_initial)
 async def cb_card_create_initial(msg: Message, state: FSMContext):
@@ -10854,6 +11322,7 @@ async def cb_card_create_initial(msg: Message, state: FSMContext):
     await state.update_data(card_initial=amount)
     await state.set_state(CardStates.creating_card_pin)
     await msg.reply("⚙️ Введите PIN для карты (4-6 цифр)\n\n‼️ Сохраните свой PIN и не давайте его никому!")
+
 
 @dp.message(CardStates.creating_card_pin)
 async def cb_card_create_pin(msg: Message, state: FSMContext):
@@ -10876,7 +11345,9 @@ async def cb_card_create_pin(msg: Message, state: FSMContext):
     # создаём карту
     card_number = await create_card(uid, name=name, initial_balance=amount, pin=pin if pin else None)
     await state.clear()
-    await msg.reply(f"✅ Карта создана: <code>{card_number}</code>\n🔰 Название: {name}\n💰 Баланс: {amount:.2f}", parse_mode="HTML")
+    await msg.reply(f"✅ Карта создана: <code>{card_number}</code>\n🔰 Название: {name}\n💰 Баланс: {amount:.2f}",
+                    parse_mode="HTML")
+
 
 # view card
 @dp.callback_query(F.data.lower().startswith("card_view:"))
@@ -10890,7 +11361,7 @@ async def cb_card_view(query: CallbackQuery):
     lines = []
     lines.append(f"💳 Карта: <b>{card.get('name') or 'Без имени'}</b>")
     lines.append(f"🔗 Номер: <code>{cn}</code>")
-    lines.append(f"💰 Баланс: <b>{int(card.get('balance',0))}</b> mDrops")
+    lines.append(f"💰 Баланс: <b>{int(card.get('balance', 0))}</b> mDrops")
     lines.append(f"🛡 Статус: <b>{'ЗАБЛОКИРОВАНА' if card.get('blocked') else 'Активна'}</b>")
     lines.append(f"🔰 Владелец: <code>{owner_id}</code>")
     # имя владельца, если доступно
@@ -10910,7 +11381,8 @@ async def cb_card_view(query: CallbackQuery):
         [InlineKeyboardButton(text="📥 Пополнить", callback_data=f"card_topup:{cn}"),
          InlineKeyboardButton(text="📤 Снять на баланс", callback_data=f"card_withdraw:{cn}")],
         [InlineKeyboardButton(text="📤 Перевод по номеру", callback_data=f"card_transfer:{cn}")],
-        [InlineKeyboardButton(text="🔒 Заблокировать" if not card.get("blocked") else "Разблокировать", callback_data=f"card_block_toggle:{cn}")],
+        [InlineKeyboardButton(text="🔒 Заблокировать" if not card.get("blocked") else "Разблокировать",
+                              callback_data=f"card_block_toggle:{cn}")],
         [InlineKeyboardButton(text="❌ Удалить карту", callback_data=f"card_delete:{cn}")],
         [InlineKeyboardButton(text="⬅️ Назад", callback_data="back_cards")]
     ])
@@ -10920,13 +11392,16 @@ async def cb_card_view(query: CallbackQuery):
     except Exception:
         await query.message.answer(text, parse_mode="HTML", reply_markup=kb)
 
+
 # topup flow
 @dp.callback_query(F.data.lower().startswith("card_topup:"))
 async def cb_card_topup(query: CallbackQuery, state: FSMContext):
-    cn = query.data.split(":",1)[1]
+    cn = query.data.split(":", 1)[1]
     await state.update_data(card_target=cn)
     await state.set_state(CardStates.topup_amount)
-    await query.message.edit_text("💰 Введите сумму для пополнения с основного баланса (например 1000) или \"отмена\" для отмены")
+    await query.message.edit_text(
+        "💰 Введите сумму для пополнения с основного баланса (например 1000) или \"отмена\" для отмены")
+
 
 @dp.message(CardStates.topup_amount)
 async def cb_card_topup_amount(msg: Message, state: FSMContext):
@@ -10948,13 +11423,15 @@ async def cb_card_topup_amount(msg: Message, state: FSMContext):
     await state.clear()
     return await msg.reply(msgt)
 
+
 # withdraw flow
 @dp.callback_query(F.data.lower().startswith("card_withdraw:"))
 async def cb_card_withdraw_start(query: CallbackQuery, state: FSMContext):
-    cn = query.data.split(":",1)[1]
+    cn = query.data.split(":", 1)[1]
     await state.update_data(card_target=cn)
     await state.set_state(CardStates.withdraw_amount)
     await query.message.edit_text("📥 Введите сумму для снятия на основной баланс или \"отмена\"")
+
 
 @dp.message(CardStates.withdraw_amount)
 async def cb_card_withdraw_amount(msg: Message, state: FSMContext):
@@ -10976,13 +11453,15 @@ async def cb_card_withdraw_amount(msg: Message, state: FSMContext):
     await state.clear()
     await msg.reply(ms)
 
+
 # transfer flow: запрос цели (номер карты)
 @dp.callback_query(F.data.lower().startswith("card_transfer:"))
 async def cb_card_transfer_start(query: CallbackQuery, state: FSMContext):
-    cn = query.data.split(":",1)[1]
+    cn = query.data.split(":", 1)[1]
     await state.update_data(card_source=cn)
     await state.set_state(CardStates.transfer_card_target)
     await query.message.edit_text("Введите номер карты получателя (16 цифр) или \"отмена\"")
+
 
 @dp.message(CardStates.transfer_card_target)
 async def cb_card_transfer_target(msg: Message, state: FSMContext):
@@ -10994,6 +11473,7 @@ async def cb_card_transfer_target(msg: Message, state: FSMContext):
     await state.update_data(card_target=target)
     await state.set_state(CardStates.transfer_amount)
     await msg.reply("💸 Введите сумму перевода:")
+
 
 @dp.message(CardStates.transfer_amount)
 async def cb_card_transfer_amount(msg: Message, state: FSMContext):
@@ -11013,10 +11493,11 @@ async def cb_card_transfer_amount(msg: Message, state: FSMContext):
     await state.clear()
     await msg.reply(ms)
 
+
 # block toggle
 @dp.callback_query(F.data.lower().startswith("card_block_toggle:"))
 async def cb_card_block_toggle(query: CallbackQuery):
-    cn = query.data.split(":",1)[1]
+    cn = query.data.split(":", 1)[1]
     card = await get_card(cn)
     if not card:
         return await query.message.edit_text("Карта не найдена.")
@@ -11028,10 +11509,11 @@ async def cb_card_block_toggle(query: CallbackQuery):
     await set_card_block(cn, new_state)
     await query.message.edit_text("Карта заблокирована." if new_state else "Карта разблокирована.")
 
+
 # delete
 @dp.callback_query(F.data.lower().startswith("card_delete:"))
 async def cb_card_delete(query: CallbackQuery):
-    cn = query.data.split(":",1)[1]
+    cn = query.data.split(":", 1)[1]
     card = await get_card(cn)
     if not card:
         return await query.message.edit_text("Карта не найдена.")
@@ -11058,7 +11540,8 @@ async def cmd_my_cards(cb: CallbackQuery):
     uid = str(cb.from_user.id)
     cards = await list_cards_by_owner(uid)
     if not cards:
-        kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="➕ Создать карту", callback_data="card_create")]])
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text="➕ Создать карту", callback_data="card_create")]])
         return await cb.answer("У вас нет карт.", reply_markup=kb)
     lines = []
     kb_rows = []
@@ -11073,6 +11556,7 @@ async def cmd_my_cards(cb: CallbackQuery):
     kb = InlineKeyboardMarkup(inline_keyboard=kb_rows)
     await cb.message.edit_text("<b>💳 Ваши карты:</b>\n\n" + "\n".join(lines), parse_mode="HTML", reply_markup=kb)
 
+
 # -------------- MEGADROP COLLABORATION -------------- #
 
 @dp.message(F.text.lower().startswith("мд"))
@@ -11082,8 +11566,10 @@ async def handle_megadrop_asks(msg: Message):
 
     question_text = msg.text
     hru = ["мд ты как", "мд как ты", "мд как дела?", "мд как дела"]
-    choose_the_game = ["мд дай случайную игру", "мд дай рандомную игру", "мд какую игру сыграть", "мд какую игру играть", "мд случайная игра"]
-    all_games = ["башня", "золото", "краш", "рулетка", "кости", "мины", "кнб", "боул", "рр", "сундуки", "баскетбол", "дуэль"]
+    choose_the_game = ["мд дай случайную игру", "мд дай рандомную игру", "мд какую игру сыграть",
+                       "мд какую игру играть", "мд случайная игра"]
+    all_games = ["башня", "золото", "краш", "рулетка", "кости", "мины", "кнб", "боул", "рр", "сундуки", "баскетбол",
+                 "дуэль"]
     words = question_text.split(" ")
     if words[1] == "выбери":
         if " или " in question_text:
@@ -11095,7 +11581,10 @@ async def handle_megadrop_asks(msg: Message):
             phrases = ["я думаю что", "наверное", "я скажу", "ктобы мог подумать, но это", "и это"]
             return await msg.reply(f"{await gsname(name, user_id)}, {random.choice(phrases)} {random.choice(variants)}")
     elif question_text.lower() in hru:
-        phrases = ["жесть нагрузка", "кайфуюю", "скажи спс соламону", "топ донатор - @MB_team_1 (1500 звезд)", "ктобы мог подумать, но ЭТО ЖЕСТЬ НАГРУЗКА", "я скажу ...", "нормис", "напиши окак в комменты, это смешно п...", "норм, го в башню", "забыл про бонус?))", "забыл да? /help", "та ниче так, бизнес свой веду", "девачки тишее"]
+        phrases = ["жесть нагрузка", "кайфуюю", "скажи спс соламону", "топ донатор - @MB_team_1 (1500 звезд)",
+                   "ктобы мог подумать, но ЭТО ЖЕСТЬ НАГРУЗКА", "я скажу ...", "нормис",
+                   "напиши окак в комменты, это смешно п...", "норм, го в башню", "забыл про бонус?))",
+                   "забыл да? /help", "та ниче так, бизнес свой веду", "девачки тишее"]
         return await msg.reply(f"{await gsname(name, user_id)}, {random.choice(phrases)}")
     elif question_text.lower() in choose_the_game:
         phrases = ["я думаю что", "наверное", "я скажу", "ктобы мог подумать, но это", "и это", "пожалуй это будет"]
@@ -11109,14 +11598,17 @@ async def handle_megadrop_asks(msg: Message):
                 return await msg.reply(f"{await gsname(name, user_id)}, введи варианты!")
 
             phrases = ["я думаю что", "наверное", "я скажу", "ктобы мог подумать, но это", "и это", "пожалуй"]
-            return await msg.reply(f"{await gsname(name, user_id)}, {random.choice(phrases)} {random.randint(variants[0], variants[1])}")
+            return await msg.reply(
+                f"{await gsname(name, user_id)}, {random.choice(phrases)} {random.randint(variants[0], variants[1])}")
     else:
-        await msg.reply(f"{await gsname(name, user_id)}, я не знаю как ответить!\n\n{html.blockquote(f"Вопросы для МегаДропа:\n{html.code("мд выбери (текст 1) или (текст 2)")}\n{html.code("мд как дела")}\n{html.code("мд дай рандомную игру")}\n{html.code("мд рандом от (число 1) до (число 2)")}")}")
+        await msg.reply(
+            f"{await gsname(name, user_id)}, я не знаю как ответить!\n\n{html.blockquote(f"Вопросы для МегаДропа:\n{html.code("мд выбери (текст 1) или (текст 2)")}\n{html.code("мд как дела")}\n{html.code("мд дай рандомную игру")}\n{html.code("мд рандом от (число 1) до (число 2)")}")}")
 
 
 # -------------- ADMIN COMMANDS -------------- #
 
 LOGS_FOR_PAGE = 10
+
 
 def make_logs_keyboard(page: int, total_pages: int, user_id: int) -> types.InlineKeyboardMarkup:
     prev_page = max(page - 1, 0)
@@ -11129,7 +11621,7 @@ def make_logs_keyboard(page: int, total_pages: int, user_id: int) -> types.Inlin
         text="Старее ➡️", callback_data=f"logs:{user_id}:{next_page}"
     )
     page_btn = types.InlineKeyboardButton(
-        text=f"Страница {page+1}/{total_pages}", callback_data=f"logs:{user_id}:noop"
+        text=f"Страница {page + 1}/{total_pages}", callback_data=f"logs:{user_id}:noop"
     )
 
     inline_keyboard = [
@@ -11137,6 +11629,7 @@ def make_logs_keyboard(page: int, total_pages: int, user_id: int) -> types.Inlin
         [page_btn],
     ]
     return types.InlineKeyboardMarkup(inline_keyboard=inline_keyboard)
+
 
 def format_logs_page(logs: list[str], page: int) -> str:
     start = page * LOGS_FOR_PAGE
@@ -11146,8 +11639,9 @@ def format_logs_page(logs: list[str], page: int) -> str:
     lines = []
     for i, item in enumerate(page_logs, start=start + 1):
         lines.append(f"{i}. {item}")
-    header = f"Логи (показано {start+1}-{start+len(page_logs)} з {len(logs)})\n\n"
+    header = f"Логи (показано {start + 1}-{start + len(page_logs)} з {len(logs)})\n\n"
     return header + "\n\n".join(lines)
+
 
 @dp.callback_query(F.data.startswith("send_logs_callback"))
 async def handle_send_callback_log(query: CallbackQuery):
@@ -11194,6 +11688,7 @@ async def handle_send_log(message: types.Message):
     kb = make_logs_keyboard(page, total_pages, user_id)
     await message.answer(text, reply_markup=kb)
 
+
 @dp.callback_query(lambda c: c.data and c.data.startswith("logs:"))
 async def process_logs_page(callback: CallbackQuery):
     await callback.answer()
@@ -11235,6 +11730,7 @@ async def process_logs_page(callback: CallbackQuery):
     except Exception:
         await callback.message.answer(text, reply_markup=kb)
 
+
 @dp.message(Command("clear_log"))
 async def handle_clear_log(message: Message):
     user_id = message.from_user.id
@@ -11245,6 +11741,7 @@ async def handle_clear_log(message: Message):
         save_log({"events": []})
 
         await message.answer(f"Логи успешно очищены!")
+
 
 @dp.callback_query(F.data.startswith("clear_logs_callback"))
 async def handle_clear_log(query: CallbackQuery):
@@ -11262,6 +11759,7 @@ async def handle_clear_log(query: CallbackQuery):
 
     await query.answer(f"Логи успешно очищены!")
 
+
 @dp.callback_query(F.data.startswith("admin_give_status"))
 async def handle_clear_log(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
@@ -11277,9 +11775,11 @@ async def handle_clear_log(query: CallbackQuery, state: FSMContext):
     for i in range(len(STATUSES)):
         statuses_str = statuses_str + f"{STATUSES[i]} ({i}) \n • "
 
-    statuses_str = statuses_str[:len(statuses_str)-2]
+    statuses_str = statuses_str[:len(statuses_str) - 2]
 
-    await query.message.edit_text(f"{await gsname(query.from_user.first_name, user_id)}, введи номер статуса, который хочешь выдать (номер статуса указан возле названия статуса)\n\n{statuses_str}", reply_markup=ckb(user_id))
+    await query.message.edit_text(
+        f"{await gsname(query.from_user.first_name, user_id)}, введи номер статуса, который хочешь выдать (номер статуса указан возле названия статуса)\n\n{statuses_str}",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_status_give_status)
 
 
@@ -11322,6 +11822,7 @@ async def handle_msg_admin_send(msg: Message, state: FSMContext):
     await state.set_state(AdminPanelStates.waiting_for_text_send_message)
     await msg.answer("Введите текст сообщения", reply_markup=ckb(user_id))
 
+
 @dp.message(AdminPanelStates.waiting_for_text_send_message)
 async def handle_waiting_for_text_send_message(msg: Message, state: FSMContext):
     user_id = msg.from_user.id
@@ -11329,14 +11830,18 @@ async def handle_waiting_for_text_send_message(msg: Message, state: FSMContext):
 
     await state.update_data(text=text)
 
-    await msg.answer(f"Добаваить кноку с URL-ссылкой?", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Да", callback_data="add_kb_admin_send")], [InlineKeyboardButton(text="Нет, отправить уже", callback_data="admin_send_msg_now")]]))
+    await msg.answer(f"Добаваить кноку с URL-ссылкой?", reply_markup=InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Да", callback_data="add_kb_admin_send")],
+                         [InlineKeyboardButton(text="Нет, отправить уже", callback_data="admin_send_msg_now")]]))
     await state.set_state(AdminPanelStates.waiting_for_kb_choose_send_message)
 
 
 @dp.message(AdminPanelStates.waiting_for_kb_choose_send_message)
 async def handle_waiting_for_promo_data(msg: Message, state: FSMContext):
     uid = msg.from_user.id
-    await msg.answer(f"Добаваить кноку с URL-ссылкой?", reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Да (дальше можно отменить)", callback_data="add_kb_admin_send")], [InlineKeyboardButton(text="Нет, отправить уже", callback_data="admin_send_msg_now")]]))
+    await msg.answer(f"Добаваить кноку с URL-ссылкой?", reply_markup=InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Да (дальше можно отменить)", callback_data="add_kb_admin_send")],
+                         [InlineKeyboardButton(text="Нет, отправить уже", callback_data="admin_send_msg_now")]]))
 
 
 @dp.callback_query(F.data == "add_kb_admin_send")
@@ -11344,7 +11849,9 @@ async def handle_add_kb_admin_send(query: CallbackQuery, state: FSMContext):
     uid = query.from_user.id
     await state.set_state(AdminPanelStates.waiting_for_send_kb_send_message)
 
-    await query.message.edit_text("Введите кнопку в формате:\n(текст кнопки)<code>|</code>(ссылка)", reply_markup=ckb(uid))
+    await query.message.edit_text("Введите кнопку в формате:\n(текст кнопки)<code>|</code>(ссылка)",
+                                  reply_markup=ckb(uid))
+
 
 @dp.message(AdminPanelStates.waiting_for_send_kb_send_message)
 async def handle_waiting_for_send_kb_send_message(msg: Message, state: FSMContext):
@@ -11355,7 +11862,8 @@ async def handle_waiting_for_send_kb_send_message(msg: Message, state: FSMContex
     tuid = sd["id"]
     mtext = sd["text"]
     try:
-        await bot.send_message(tuid, mtext, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=text, url=url)]]))
+        await bot.send_message(tuid, mtext, reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text=text, url=url)]]))
         await msg.answer("Отправка прошла успешно")
         return await state.clear()
     except Exception as e:
@@ -11411,9 +11919,11 @@ async def handle_waiting_for_promo_data(message: Message, state: FSMContext):
         return await message.reply(f"⚠️ Промо '{name}' уже существует.")
     finally:
         conn.close()
-    await send_log(f"Админ @{message.from_user.username} ({message.from_user.id}) создал промокод \"{name}\" с призом {reward} mDrops")
+    await send_log(
+        f"Админ @{message.from_user.username} ({message.from_user.id}) создал промокод \"{name}\" с призом {reward} mDrops")
     await message.reply(f"✅ Промокод <b>{name}</b> создан!\n🎁 Приз: {reward}")
     await state.clear()
+
 
 @dp.message(AdminPanelStates.waiting_for_status_give_status)
 async def handle_id_for_status_giver(msg: Message, state: FSMContext):
@@ -11430,7 +11940,8 @@ async def handle_id_for_status_giver(msg: Message, state: FSMContext):
 
     await state.update_data(status_id=status_id)
     await state.set_state(AdminPanelStates.waiting_for_id_give_status)
-    await msg.answer(f"{await gsname(msg.from_user.first_name, user_id)}, введи ID получателя статуса", reply_markup=ckb(user_id))
+    await msg.answer(f"{await gsname(msg.from_user.first_name, user_id)}, введи ID получателя статуса",
+                     reply_markup=ckb(user_id))
 
 
 @dp.message(AdminPanelStates.waiting_for_id_give_status)
@@ -11453,8 +11964,11 @@ async def handle_id_for_status_giver(msg: Message, state: FSMContext):
     target_name = chat.first_name
 
     await state.clear()
-    await msg.answer(f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно выдал статус \"{get_status(status)}\" пользователю {target_name} ({id})")
-    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно выдал статус \"{get_status(status)}\" пользователю {target_name} ({id})", add_timestamp=True)
+    await msg.answer(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно выдал статус \"{get_status(status)}\" пользователю {target_name} ({id})")
+    append_log(
+        f"{await gsname(msg.from_user.first_name, user_id)} успешно выдал статус \"{get_status(status)}\" пользователю {target_name} ({id})",
+        add_timestamp=True)
 
 
 @dp.callback_query(F.data.startswith("admin_clear_player"))
@@ -11468,7 +11982,9 @@ async def handle_clear_log(query: CallbackQuery, state: FSMContext):
     if int(caller_id) not in SPECIAL_ADMINS:
         return await query.answer("Ты не имеешь доступа к данному действию!")
 
-    await query.message.edit_text(f"{await gsname(query.from_user.first_name, user_id)}, введи ID игрока, которому надо сбросить БД", reply_markup=ckb(user_id))
+    await query.message.edit_text(
+        f"{await gsname(query.from_user.first_name, user_id)}, введи ID игрока, которому надо сбросить БД",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_id_clear_data)
 
 
@@ -11496,8 +12012,10 @@ async def handle_waiting_for_id_clear_data(msg: Message, state: FSMContext):
     target_name = chat.first_name
 
     await save_data(id, target_data)
-    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно очистил БД игрока {target_name} ({id})", add_timestamp=True)
-    await msg.reply(f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно сбросил бд игрока {target_name} ({id})")
+    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно очистил БД игрока {target_name} ({id})",
+               add_timestamp=True)
+    await msg.reply(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно сбросил бд игрока {target_name} ({id})")
     await state.clear()
 
 
@@ -11510,10 +12028,15 @@ async def handle_clear_log(query: CallbackQuery, state: FSMContext):
     if int(caller_id) != int(user_id):
         return await query.answer("Ты не имеешь доступа к данной кнопке!")
 
-    await query.message.edit_text(f"{await gsname(query.from_user.first_name, user_id)}, введи ID игрока, которому надо сбросить mDrops", reply_markup=ckb(user_id))
+    await query.message.edit_text(
+        f"{await gsname(query.from_user.first_name, user_id)}, введи ID игрока, которому надо сбросить mDrops",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_id_clear_mdrops)
 
+
 import html as pyhtml
+
+
 def safe_int(v, default=0):
     try:
         if v is None:
@@ -11528,6 +12051,7 @@ def safe_int(v, default=0):
         return int(s)
     except Exception:
         return default
+
 
 def format_contract_row(idx: int, c: dict) -> str:
     """
@@ -11568,6 +12092,7 @@ def format_contract_row(idx: int, c: dict) -> str:
         f"🏷 Уровень: <b>{level}</b>  •  ⏱ Последняя выплата: <code>{last_dt}</code>\n"
     )
 
+
 def build_partners_page_text(channels_list: list, page: int, page_size: int) -> str:
     total = len(channels_list)
     if total == 0:
@@ -11583,13 +12108,14 @@ def build_partners_page_text(channels_list: list, page: int, page_size: int) -> 
     end = start + page_size
     slice_items = channels_list[start:end]
 
-    header = f"📄 <b>Контракты (страница {page+1}/{total_pages})</b>\n\n"
+    header = f"📄 <b>Контракты (страница {page + 1}/{total_pages})</b>\n\n"
     body_lines = []
-    for i, c in enumerate(slice_items, start=1+start):
+    for i, c in enumerate(slice_items, start=1 + start):
         body_lines.append(format_contract_row(i, c))
     footer = f"\nВсего контрактов: <b>{total}</b>"
 
     return header + "\n".join(body_lines) + footer
+
 
 def build_partners_page_kb(channels_slice: list, page: int, total_items: int, page_size: int) -> InlineKeyboardMarkup:
     """
@@ -11608,11 +12134,11 @@ def build_partners_page_kb(channels_slice: list, page: int, total_items: int, pa
     total_pages = max(1, math.ceil(total_items / page_size))
     nav_row = []
     if page > 0:
-        nav_row.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"partners_list:{page-1}"))
+        nav_row.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"partners_list:{page - 1}"))
     else:
         nav_row.append(InlineKeyboardButton(text="⬅️ Назад", callback_data=f"partners_list:noop"))
     if page < total_pages - 1:
-        nav_row.append(InlineKeyboardButton(text="➡️ Дальше", callback_data=f"partners_list:{page+1}"))
+        nav_row.append(InlineKeyboardButton(text="➡️ Дальше", callback_data=f"partners_list:{page + 1}"))
     else:
         nav_row.append(InlineKeyboardButton(text="➡️ Дальше", callback_data=f"partners_list:noop"))
 
@@ -11620,6 +12146,7 @@ def build_partners_page_kb(channels_slice: list, page: int, total_items: int, pa
     kb.append([InlineKeyboardButton(text="Закрыть", callback_data="partners_list:close")])
 
     return InlineKeyboardMarkup(inline_keyboard=kb)
+
 
 # ====== Команда для админа /partners_list ======
 @dp.message(F.text == "/partners_list")
@@ -11645,6 +12172,7 @@ async def partners_list_cmd(msg: Message):
     kb = build_partners_page_kb(slice_items, page, len(channels), PAGE_SIZE)
 
     await msg.answer(text, parse_mode="HTML", reply_markup=kb, disable_web_page_preview=True)
+
 
 # ====== Callback для пагинации ======
 @dp.callback_query(F.data.startswith("partners_list:"))
@@ -11689,6 +12217,7 @@ async def partners_list_page_cb(query: CallbackQuery):
         await query.message.answer(text, parse_mode="HTML", reply_markup=kb, disable_web_page_preview=True)
 
     await query.answer()
+
 
 @dp.callback_query(F.data.startswith("partners_finish:"))
 async def partners_finish_cb(query: CallbackQuery):
@@ -11744,7 +12273,9 @@ async def partners_finish_cb(query: CallbackQuery):
     # уведомляем владельца (если возможно)
     try:
         if owner_id:
-            await bot.send_message(owner_id, f"❗️ Ваш контракт <code>#{contract_id}</code> был завершён администратором {caller.full_name} (id: {caller_id}).", parse_mode="HTML")
+            await bot.send_message(owner_id,
+                                   f"❗️ Ваш контракт <code>#{contract_id}</code> был завершён администратором {caller.full_name} (id: {caller_id}).",
+                                   parse_mode="HTML")
     except Exception:
         # если отправка не удалась — не критично, просто логируем
         append_log({
@@ -11772,11 +12303,13 @@ async def partners_finish_cb(query: CallbackQuery):
         slice_items = channels[start:start + PAGE_SIZE]
         kb = build_partners_page_kb(slice_items, page, len(channels), PAGE_SIZE)
 
-        await query.message.edit_text(f"✅ Контракт #{contract_id} завершён.\n\n{text}", parse_mode="HTML", reply_markup=kb, disable_web_page_preview=True)
+        await query.message.edit_text(f"✅ Контракт #{contract_id} завершён.\n\n{text}", parse_mode="HTML",
+                                      reply_markup=kb, disable_web_page_preview=True)
     except Exception:
         # Если не получилось редактировать — просто отправим ответ
         await query.message.answer(f"✅ Контракт #{contract_id} завершён.")
     return await query.answer("Контракт завершён.", show_alert=True)
+
 
 @dp.message(AdminPanelStates.waiting_for_id_clear_mdrops)
 async def handle_waiting_for_id_clear_data(msg: Message, state: FSMContext):
@@ -11797,8 +12330,10 @@ async def handle_waiting_for_id_clear_data(msg: Message, state: FSMContext):
     target_name = chat.first_name
 
     await save_data(id, target_data)
-    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно очистил mDrops игрока {target_name} ({id})", add_timestamp=True)
-    await msg.reply(f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно сбросил mDrops игрока {target_name} ({id})")
+    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно очистил mDrops игрока {target_name} ({id})",
+               add_timestamp=True)
+    await msg.reply(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно сбросил mDrops игрока {target_name} ({id})")
     await state.clear()
 
 
@@ -11809,15 +12344,22 @@ async def handle_admin_panel(message: Message):
     if not user_id in ADMINS:
         return
 
-    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Начиcлить mDrops", callback_data=f"add_admins_mdrops:{user_id}")],
-                                               [InlineKeyboardButton(text="Начиcлить GGs", callback_data=f"add_admins_ggs:{user_id}")],
-                                               [InlineKeyboardButton(text="Забанить", callback_data=f"admin_ban:{user_id}"), InlineKeyboardButton(text="Разбанить", callback_data=f"admins_unban:{user_id}")],
-                                               [InlineKeyboardButton(text="Логи", callback_data=f"send_logs_callback:{user_id}"), InlineKeyboardButton(text="Очистить Логи", callback_data=f"clear_logs_callback:{user_id}")],
-                                               [InlineKeyboardButton(text="Дать Статус", callback_data=f"admin_give_status:{user_id}")],
-                                               [InlineKeyboardButton(text="Очистить Игрока", callback_data=f"admin_clear_player:{user_id}"), InlineKeyboardButton(text="Очистить mDrops Игрока", callback_data=f"admin_clear_mDrops:{user_id}")],
-                                               [InlineKeyboardButton(text="Новый Промо", callback_data=f"admin_new_promo:{user_id}")]])
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="Начиcлить mDrops", callback_data=f"add_admins_mdrops:{user_id}")],
+                         [InlineKeyboardButton(text="Начиcлить GGs", callback_data=f"add_admins_ggs:{user_id}")],
+                         [InlineKeyboardButton(text="Забанить", callback_data=f"admin_ban:{user_id}"),
+                          InlineKeyboardButton(text="Разбанить", callback_data=f"admins_unban:{user_id}")],
+                         [InlineKeyboardButton(text="Логи", callback_data=f"send_logs_callback:{user_id}"),
+                          InlineKeyboardButton(text="Очистить Логи", callback_data=f"clear_logs_callback:{user_id}")],
+                         [InlineKeyboardButton(text="Дать Статус", callback_data=f"admin_give_status:{user_id}")],
+                         [InlineKeyboardButton(text="Очистить Игрока", callback_data=f"admin_clear_player:{user_id}"),
+                          InlineKeyboardButton(text="Очистить mDrops Игрока",
+                                               callback_data=f"admin_clear_mDrops:{user_id}")],
+                         [InlineKeyboardButton(text="Новый Промо", callback_data=f"admin_new_promo:{user_id}")]])
 
-    await message.reply(f"{await gsname(message.from_user.first_name, user_id)}, ты в админ-панели, выбери действие:",reply_markup=kb)
+    await message.reply(f"{await gsname(message.from_user.first_name, user_id)}, ты в админ-панели, выбери действие:",
+                        reply_markup=kb)
+
 
 @dp.callback_query(F.data.startswith("admin_new_promo:"))
 async def handle_callback_admin_ban(callback: CallbackQuery, state: FSMContext):
@@ -11830,9 +12372,11 @@ async def handle_callback_admin_ban(callback: CallbackQuery, state: FSMContext):
     if int(caller_id) not in SPECIAL_ADMINS:
         return await callback.answer("Ты не имеешь доступа к данному действию!")
 
-
-    await callback.message.edit_text(f"{await gsname(callback.from_user.first_name, user_id)}, введи данные нового промокода в формате \"(название) (приз)\"", reply_markup=ckb(user_id))
+    await callback.message.edit_text(
+        f"{await gsname(callback.from_user.first_name, user_id)}, введи данные нового промокода в формате \"(название) (приз)\"",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_promo_data)
+
 
 @dp.callback_query(F.data.startswith("admins_unban:"))
 async def handle_callback_admin_ban(callback: CallbackQuery, state: FSMContext):
@@ -11843,8 +12387,11 @@ async def handle_callback_admin_ban(callback: CallbackQuery, state: FSMContext):
     if int(caller_id) != int(user_id):
         return await callback.answer("Ты не имеешь доступа к данной кнопке!")
 
-    await callback.message.edit_text(f"{await gsname(callback.from_user.first_name, user_id)}, введи ID пользователя которого хочешь разбанить", reply_markup=ckb(user_id))
+    await callback.message.edit_text(
+        f"{await gsname(callback.from_user.first_name, user_id)}, введи ID пользователя которого хочешь разбанить",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_id_for_unban)
+
 
 @dp.message(AdminPanelStates.waiting_for_id_for_unban)
 async def handle_waiting_for_id_for_unban(msg: Message, state: FSMContext):
@@ -11856,11 +12403,9 @@ async def handle_waiting_for_id_for_unban(msg: Message, state: FSMContext):
         await state.clear()
         return await msg.reply("Данный пользователь еще не зарегистрирован!")
 
-
     data = load_banned()
     if int(id) not in data["banned"]:
         return await msg.reply("⚠️ Пользователь не забанен.")
-
 
     data["banned"].remove(int(id))
     save_banned(data)
@@ -11868,10 +12413,11 @@ async def handle_waiting_for_id_for_unban(msg: Message, state: FSMContext):
     chat = await bot.get_chat(id)
     target_name = chat.first_name
 
-    await msg.answer(f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно разбанил пользователя {target_name} ({id})")
-    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно разбанил пользователя {target_name} ({id})", add_timestamp=True)
+    await msg.answer(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно разбанил пользователя {target_name} ({id})")
+    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно разбанил пользователя {target_name} ({id})",
+               add_timestamp=True)
     await state.clear()
-
 
 
 @dp.callback_query(F.data.startswith("admin_ban:"))
@@ -11883,8 +12429,11 @@ async def handle_callback_admin_ban(callback: CallbackQuery, state: FSMContext):
     if int(caller_id) != int(user_id):
         return await callback.answer("Ты не имеешь доступа к данной кнопке!")
 
-    await callback.message.edit_text(f"{await gsname(callback.from_user.first_name, user_id)}, введи ID пользователя которого хочешь забанить", reply_markup=ckb(user_id))
+    await callback.message.edit_text(
+        f"{await gsname(callback.from_user.first_name, user_id)}, введи ID пользователя которого хочешь забанить",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_id_for_ban)
+
 
 @dp.message(AdminPanelStates.waiting_for_id_for_ban)
 async def handle_waiting_for_id_for_ban(msg: Message, state: FSMContext):
@@ -11909,8 +12458,10 @@ async def handle_waiting_for_id_for_ban(msg: Message, state: FSMContext):
     chat = await bot.get_chat(id)
     target_name = chat.first_name
 
-    await msg.answer(f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно забанил пользователя {target_name} ({id})")
-    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно забанил пользователя {target_name} ({id})", add_timestamp=True)
+    await msg.answer(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно забанил пользователя {target_name} ({id})")
+    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно забанил пользователя {target_name} ({id})",
+               add_timestamp=True)
     await state.clear()
 
 
@@ -11925,7 +12476,9 @@ async def handle_callback_add_admins_mdrops(callback: CallbackQuery, state: FSMC
     if int(caller_id) not in SPECIAL_ADMINS:
         return await callback.answer("Ты не имеешь доступа к данному действию!")
 
-    await callback.message.edit_text(f"{await gsname(callback.from_user.first_name, user_id)}, введи количество mDrops которое желаешь начислить", reply_markup=ckb(user_id))
+    await callback.message.edit_text(
+        f"{await gsname(callback.from_user.first_name, user_id)}, введи количество mDrops которое желаешь начислить",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_mdrops_amount)
 
 
@@ -11947,7 +12500,8 @@ async def handle_waiting_for_mdrops_amount(msg: Message, state: FSMContext):
 
     await state.update_data(amount=amount)
 
-    await msg.reply(f"{await gsname(msg.from_user.first_name, user_id)}, ты начисляешь {amount} mDrops, введи ID получателя")
+    await msg.reply(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты начисляешь {amount} mDrops, введи ID получателя")
     await state.set_state(AdminPanelStates.waiting_for_id_mdrops_add)
 
 
@@ -11970,8 +12524,11 @@ async def handle_waiting_for_mdrops_amount(msg: Message, state: FSMContext):
     chat = await bot.get_chat(id)
     target_name = chat.first_name
 
-    await msg.answer(f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно начислил {amount} mDrops пользователю {target_name} ({id})")
-    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно начислил {amount} mDrops пользователю {target_name} ({id})", add_timestamp=True)
+    await msg.answer(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно начислил {amount} mDrops пользователю {target_name} ({id})")
+    append_log(
+        f"{await gsname(msg.from_user.first_name, user_id)} успешно начислил {amount} mDrops пользователю {target_name} ({id})",
+        add_timestamp=True)
     await state.clear()
 
 
@@ -11986,8 +12543,11 @@ async def handle_callback_add_admins_mdrops(callback: CallbackQuery, state: FSMC
     if int(caller_id) not in SPECIAL_ADMINS:
         return await callback.answer("Ты не имеешь доступа к данному действию!")
 
-    await callback.message.edit_text(f"{await gsname(callback.from_user.first_name, user_id)}, введи количество GGs которое желаешь начислить", reply_markup=ckb(user_id))
+    await callback.message.edit_text(
+        f"{await gsname(callback.from_user.first_name, user_id)}, введи количество GGs которое желаешь начислить",
+        reply_markup=ckb(user_id))
     await state.set_state(AdminPanelStates.waiting_for_ggs_amount)
+
 
 @dp.message(AdminPanelStates.waiting_for_ggs_amount)
 async def handle_waiting_for_ggs_amount(msg: Message, state: FSMContext):
@@ -12007,7 +12567,8 @@ async def handle_waiting_for_ggs_amount(msg: Message, state: FSMContext):
 
     await state.update_data(amount=amount)
 
-    await msg.reply(f"{await gsname(msg.from_user.first_name, user_id)}, ты начисляешь {amount} GGs, введи ID получателя")
+    await msg.reply(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты начисляешь {amount} GGs, введи ID получателя")
     await state.set_state(AdminPanelStates.waiting_for_id_ggs_add)
 
 
@@ -12030,8 +12591,11 @@ async def handle_waiting_for_ggs_amount(msg: Message, state: FSMContext):
     chat = await bot.get_chat(id)
     target_name = chat.first_name
 
-    await msg.answer(f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно начислил {amount} GGs пользователю {target_name} ({id})")
-    append_log(f"{await gsname(msg.from_user.first_name, user_id)} успешно начислил {amount} GGs пользователю {target_name} ({id})", add_timestamp=True)
+    await msg.answer(
+        f"{await gsname(msg.from_user.first_name, user_id)}, ты успешно начислил {amount} GGs пользователю {target_name} ({id})")
+    append_log(
+        f"{await gsname(msg.from_user.first_name, user_id)} успешно начислил {amount} GGs пользователю {target_name} ({id})",
+        add_timestamp=True)
     await state.clear()
 
 
@@ -12238,6 +12802,7 @@ async def handle_admin_get(message: Message):
         # если редактирование/парсинг HTML упал — отправим без parse_mode
         await message.reply(final_text)
 
+
 @dp.message(Command("clear_b"))
 async def admin_clear_b(message: Message):
     if message.from_user.id not in ADMINS:
@@ -12274,7 +12839,8 @@ async def admin_clear_b(message: Message):
     except Exception:
         first_name = None
 
-    actor = f"@{message.from_user.username}" if getattr(message.from_user, "username", None) else str(message.from_user.id)
+    actor = f"@{message.from_user.username}" if getattr(message.from_user, "username", None) else str(
+        message.from_user.id)
     target_display = f"{first_name} ({target_id})" if first_name else str(target_id)
 
     await send_log(f"Админ {actor} ({message.from_user.id}) обнулил все mDrops игрока {target_display}")
@@ -12319,6 +12885,7 @@ async def admin_clear(message: Message):
         f"Админ @{message.from_user.username} ({message.from_user.id}) очистисл всю БД игрока {first_name} ({target_id})")
     await message.answer(f"✅ Все данные пользователя {target_id} успешно очищены.")
 
+
 @dp.message(Command("statuses_info"))
 async def handle_statuses_info(message: Message):
     user_id = message.from_user.id
@@ -12330,15 +12897,16 @@ async def handle_statuses_info(message: Message):
     for i in range(len(STATUSES)):
         statuses_str = statuses_str + f"{STATUSES[i]} ({i}) \n • "
 
-    statuses_str = statuses_str[:len(statuses_str)-2]
+    statuses_str = statuses_str[:len(statuses_str) - 2]
 
     special_statuses_str = "\n⭐️ Уникальные статусы:\n • "
     for i in range(len(get_unique_statuses())):
         special_statuses_str = special_statuses_str + f"{get_unique_statuses()[i]} (999{i}) \n • "
 
-    special_statuses_str = special_statuses_str[:len(special_statuses_str)-2]
+    special_statuses_str = special_statuses_str[:len(special_statuses_str) - 2]
 
     await message.answer(f"💡 Существующие статусы:\n{statuses_str} {special_statuses_str}")
+
 
 @dp.message(F.text.lower().startswith("/istatus"))
 async def handle_new_status(message: Message):
@@ -12357,9 +12925,11 @@ async def handle_new_status(message: Message):
 
     recipient_data["status"] = int(numb)
     await save_data(recipient_id, recipient_data)
-    await send_log(f"Админ {html.link(await gsname(message.from_user.first_name, message.from_user.id), f"t.me/{message.from_user.username}")} выдал статус под номером {int(numb)} ({STATUSES[int(numb)]})")
+    await send_log(
+        f"Админ {html.link(await gsname(message.from_user.first_name, message.from_user.id), f"t.me/{message.from_user.username}")} выдал статус под номером {int(numb)} ({STATUSES[int(numb)]})")
 
     await message.answer(f"Статус номер {numb} ({STATUSES[int(numb)]}) выдано пользователю ID {recipient_id}")
+
 
 @dp.message(F.text.lower().startswith("/new_promo"))
 async def handle_new_promo(message: Message):
@@ -12393,8 +12963,10 @@ async def handle_new_promo(message: Message):
         return await message.reply(f"⚠️ Промо '{name}' уже существует.")
     finally:
         conn.close()
-    await send_log(f"Админ @{message.from_user.username} ({message.from_user.id}) создал промокод \"{name}\" с призом {reward} mDrops")
+    await send_log(
+        f"Админ @{message.from_user.username} ({message.from_user.id}) создал промокод \"{name}\" с призом {reward} mDrops")
     await message.reply(f"✅ Промокод <b>{name}</b> создан!\n🎁 Приз: {reward}")
+
 
 @dp.message(F.text.lower() == "/manual_save_db")
 async def handle_manual_save_db(msg: Message):
@@ -12413,6 +12985,7 @@ async def handle_manual_save_db(msg: Message):
         return await handle_error(msg.from_user.username, e, user_id, 888)
 
     await msg.reply(f"{await gsname(name, user_id)}, ручное сохранение БД прошло успешно!")
+
 
 @dp.message(F.text.lower().startswith("/hhh"))
 async def hhh_command(message: Message):
@@ -12456,7 +13029,9 @@ async def hhh_command(message: Message):
 
     await send_log(
         f"Админ @{message.from_user.username} ({message.from_user.id}) начислил {format_balance(amount)} mDrops {recipient_name} ({recipient_id})")
-    await message.answer(f"💸 {format_balance(amount)} mDrops было начислено пользователю {await gsname(recipient_name, message.from_user.id)}.")
+    await message.answer(
+        f"💸 {format_balance(amount)} mDrops было начислено пользователю {await gsname(recipient_name, message.from_user.id)}.")
+
 
 @dp.message(F.text.lower().startswith("/ggg"))
 async def ggg_command(message: Message):
@@ -12502,6 +13077,7 @@ async def ggg_command(message: Message):
 
 BANNED_FILE = "banned.json"
 
+
 def load_banned():
     try:
         with open(BANNED_FILE, "r", encoding="utf-8") as f:
@@ -12512,9 +13088,11 @@ def load_banned():
     except FileNotFoundError:
         return {"banned": []}
 
+
 def save_banned(data):
     with open(BANNED_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
+
 
 @dp.message(Command("ban"))
 async def ban_command(message: Message):
@@ -12546,6 +13124,7 @@ async def ban_command(message: Message):
 
     await message.reply(f"✅ Пользователь {target_id} добавлен в бан.")
 
+
 @dp.message(Command("unban"))
 async def unban_command(message: Message):
     if message.from_user.id not in ADMINS:
@@ -12568,6 +13147,7 @@ async def unban_command(message: Message):
     save_banned(data)
 
     await message.reply(f"✅ Пользователь {target_id} разбанен.")
+
 
 def _clear_all_deposits_sync(db_path: str):
     """
@@ -12609,9 +13189,11 @@ def _clear_all_deposits_sync(db_path: str):
     finally:
         conn.close()
 
+
 # Файл с администраторами и блокировка
 ADMIN_FILE = "admins_data.json"
 ADMIN_FILE_LOCK = __import__("asyncio").Lock()
+
 
 async def _load_admins():
     """Возвращает список admin ID (int). Если файла нет — возвращает []."""
@@ -12626,6 +13208,7 @@ async def _load_admins():
         # При ошибке безопаснее вернуть пустой список
         return []
 
+
 async def _save_admins(admins):
     """Сохраняет список admin ID в файл в формате {"admins":[...]} (атомарно)."""
     data = {"admins": [int(x) for x in admins]}
@@ -12633,6 +13216,7 @@ async def _save_admins(admins):
     with open(tmp, "w", encoding="utf-8") as f:
         __import__("json").dump(data, f, ensure_ascii=False, indent=2)
     __import__("os").replace(tmp, ADMIN_FILE)
+
 
 # Хендлер /add_admin
 @dp.message(F.text.startswith("/add_admin"))
@@ -12676,6 +13260,7 @@ async def add_admin_handler(message: Message):
         except Exception:
             pass
         raise
+
 
 # Хендлер /remove_admin
 @dp.message(F.text.startswith("/remove_admin"))
@@ -12725,6 +13310,7 @@ async def remove_admin_handler(message: Message):
             pass
         raise
 
+
 @dp.message(Command("clear_deposits"))
 async def cmd_clear_deposits(message: types.Message):
     """
@@ -12757,7 +13343,8 @@ async def cmd_clear_deposits(message: types.Message):
 
     # лог і відповідь
     try:
-        append_log(f"ADMIN {message.from_user.full_name} ({uid}) cleared deposits for {modified_count} users.", add_timestamp=True)
+        append_log(f"ADMIN {message.from_user.full_name} ({uid}) cleared deposits for {modified_count} users.",
+                   add_timestamp=True)
     except Exception:
         pass
 
@@ -12770,6 +13357,7 @@ def _reset_coffres_rating_in_clans_sync(db_path: str):
     и внутри каждого клана устанавливает coffres = 0 и rating = 0 (если есть).
     Возвращает (количество изменённых, список примеров ключей).
     """
+
     def process_clan_obj(clan_obj):
         """Обнуляет coffres и rating в словаре или в элементах списка."""
         changed = False
@@ -12844,6 +13432,7 @@ def _reset_coffres_rating_in_clans_sync(db_path: str):
     finally:
         conn.close()
 
+
 @dp.message(Command("reset_clans_items"))
 async def cmd_reset_clans_items(message: types.Message):
     """
@@ -12872,7 +13461,9 @@ async def cmd_reset_clans_items(message: types.Message):
         return
 
     try:
-        append_log(f"ADMIN {message.from_user.full_name} ({uid}) reset coffres/rating в clans у {modified_count} записей.", add_timestamp=True)
+        append_log(
+            f"ADMIN {message.from_user.full_name} ({uid}) reset coffres/rating в clans у {modified_count} записей.",
+            add_timestamp=True)
     except Exception:
         pass
 
@@ -12880,6 +13471,7 @@ async def cmd_reset_clans_items(message: types.Message):
     if sample_keys:
         reply_text += f"\nПримеры изменённых ключей (до 50):\n" + ", ".join(sample_keys)
     await msg.edit_text(reply_text)
+
 
 @dp.message(F.text.lower().startswith("/clear_orders"))
 async def clear_exchange_orders_request(message: Message):
@@ -12975,7 +13567,8 @@ async def confirm_clear_orders(callback: CallbackQuery):
 
         # Лог админам
         try:
-            await send_log(f"[ADMIN] @{callback.from_user.username} ({user_id}) очистил таблицу exchange_orders. Удалено: {deleted_count}.")
+            await send_log(
+                f"[ADMIN] @{callback.from_user.username} ({user_id}) очистил таблицу exchange_orders. Удалено: {deleted_count}.")
         except:
             pass
 
@@ -12983,7 +13576,9 @@ async def confirm_clear_orders(callback: CallbackQuery):
         await handle_error(callback.from_user.username, e, callback.from_user.id, 204)
         await callback.answer("⚠ Произошла ошибка при очистке.", show_alert=True)
 
+
 DELAY_BETWEEN = 0.06  # пауза между отправками в секундах (чтобы снизить риск rate limit)
+
 
 @dp.message(F.text.startswith("/rass"))
 async def rass_handler(message: types.Message):
@@ -13060,11 +13655,12 @@ async def rass_handler(message: types.Message):
         for uid_err, err in sample:
             report += f"- {uid_err}: {err}\n"
         if len(failed) > 10:
-            report += f"... ещё {len(failed)-10} ошибок."
+            report += f"... ещё {len(failed) - 10} ошибок."
 
     await message.reply(report)
 
-#@dp.message(lambda message: message.photo)
+
+# @dp.message(lambda message: message.photo)
 async def handle_photo(message: Message):
     """
     Користувач відправив фото.
@@ -13090,7 +13686,7 @@ async def handle_photo(message: Message):
     )
 
 
-#@dp.message(F.entities)
+# @dp.message(F.entities)
 async def get_custom_emoji_id(message: Message):
     # Перевірка, чи користувач — адмін
     if message.from_user.id not in SPECIAL_ADMINS:
@@ -13108,6 +13704,7 @@ async def get_custom_emoji_id(message: Message):
     if not found:
         await message.reply("❌ У цьому повідомленні немає кастомних емодзі.")
 
+
 async def periodic_checkpoint(skip=False):
     while True:
         if skip:
@@ -13120,6 +13717,7 @@ async def periodic_checkpoint(skip=False):
                 conn.commit()
         except Exception as e:
             await send_log(f"❌ Error checkpoint: {e}")
+
 
 def ensure_qs_file():
     """
@@ -13211,8 +13809,9 @@ async def cmd_list_statuses(message: types.Message):
     statuses = get_unique_statuses()
     if not statuses:
         return await message.reply("ℹ️ Нету уникальных статусов.")
-    lines = "\n".join(f"{i+1}. {s}" for i, s in enumerate(statuses))
+    lines = "\n".join(f"{i + 1}. {s}" for i, s in enumerate(statuses))
     await message.reply(f"📜 Уникальные статусы ({len(statuses)}):\n{lines}")
+
 
 @dp.message(Command("gdata"))
 async def send_data_db(message: types.Message):
@@ -13227,6 +13826,7 @@ async def send_data_db(message: types.Message):
         await message.answer("⚠️ Файл data.db не знайдено!")
     except Exception as e:
         await message.answer(f"❗ Помилка: {e}")
+
 
 # -------------- LAUNCH -------------- #
 
