@@ -8,7 +8,6 @@ import threading
 from pathlib import Path
 import random
 import sqlite3
-import webapp
 import time
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, getcontext
@@ -59,12 +58,15 @@ BANNED = json.load(open("banned.json", encoding="utf-8"))["banned"]
 
 STATUSES = ["🫶 Игрок", "🔧 Читер", "🤣 Невезунчик", "⚜️ Уважительный", "💊 Что с ним?", "🏆 Победитель", "🎰 Лудоман",
             "💎 Миллионер", "🏅 Ветеран", "🥇 Топ 1", "💎 Топ Донатер", "🤙 Админ", "💣 Владелец", "💸 Гивавейщик", "🥇 Элита",
-            "📢 Известность", "🔮 как...", "🪬 Фантом", "🔑 Легенда", "💎 Багач", "🎭 Пранкер", "♾️ ХХХ", "♠️ Масть"]
-BUYABLE_STATUSES = ["🪬 Фантом", "🔑 Легенда", "💎 Багач", "🎭 Пранкер", "♾️ ХХХ", "♠️ Масть"]
-BUYABLE_STATUSES_PRICES = ["m50000", "m100000", "m250000", "l500000", "m1000000", "s100"]
+            "📢 Известность", "🔮 как...", "🪬 Фантом", "🔑 Легенда", "💎 Багач", "🎭 Пранкер", "♾️ ХХХ", "♠️ Масть", "⚡️ Зеп"]
+BUYABLE_STATUSES = ["🪬 Фантом", "🔑 Легенда", "💎 Багач", "🎭 Пранкер", "♾️ ХХХ", "♠️ Масть", "⚡️ Зеп"]
+BUYABLE_STATUSES_PRICES = ["m50000", "m100000", "m250000", "l500000", "m1000000", "s100", "m5000000"]
 DEFAULT_UNIQUE_STATUSES = ["🍂 lsqnz", "💎 Заместитель", "👻 Ferzister"]
 
 QS_PATH = Path("qs.json")
+
+BACK = "⬅️ Назад"
+
 # -------------- BOT AND DISPATCHER -------------- #
 
 bot = Bot(
@@ -75,7 +77,6 @@ dp = Dispatcher(storage=MemoryStorage())
 
 # -------------- FLOOD CONTROL -------------- #
 
-# Словник для зберігання часу останньої дії по користувачу
 _last_action_time = {}
 
 
@@ -84,24 +85,49 @@ def flood_protect(min_delay: float = 0.5):
     Декоратор для callback-ів.
     Якщо користувач клацає частіше, ніж раз на min_delay секунд —
     йому пишеться "Подожди немного...".
+    Якщо всередині handler-а виникає помилка редагування повідомлення
+    через спам/ліміти/неможливість редагувати — просто відповідає "Зачекай".
     """
 
     def decorator(handler):
         @wraps(handler)
-        async def wrapper(callback: CallbackQuery, *args, **kwargs):
+        async def wrapper(callback, *args, **kwargs):
             user_id = str(callback.from_user.id)
             now = time.time()
             last = _last_action_time.get(user_id, 0)
 
             if now - last < min_delay:
-                texts = ["⏳ Подожди немного...", "⏳ Да куда ты спешиш?", "⏳ Ща сек, обработка...",
-                         "⏳ Ну погоди же ты...", "⏳ Не спеши...", "⏳ Загружаюсь...", "⏳ Да погоди йомайо...",
-                         "⏳ Хочешь ошибку чтоли?", "⏳ Помедленней..."]
+                texts = [
+                    "⏳ Подожди немного...", "⏳ Да куда ты спешиш?", "⏳ Ща сек, обработка...",
+                    "⏳ Ну погоди же ты...", "⏳ Не спеши...", "⏳ Загружаюсь...",
+                    "⏳ Да погоди йомайо...", "⏳ Хочешь ошибку чтоли?", "⏳ Помедленней..."
+                ]
                 return await callback.answer(f"{random.choice(texts)}", show_alert=False)
 
             _last_action_time[user_id] = now
 
-            return await handler(callback, *args, **kwargs)
+            try:
+                return await handler(callback, *args, **kwargs)
+            except Exception as e:
+                # Переводимо текст помилки в нижній регістр для пошуку ключових слів
+                msg = str(e).lower()
+
+                # Ключові слова/фрази, які вказують на помилку редагування через спам/ліміти/неможливість редагувати
+                spam_or_edit_errors = (
+                    "spam", "slow_down", "too many requests", "retry after",
+                    "message to edit not found", "message is not modified",
+                    "can't edit message", "can't delete message", "cant edit",
+                    "edit_message", "edit_text", "message can't be edited", "editmessagetext",
+                )
+
+                if any(k in msg for k in spam_or_edit_errors):
+                    # Ввічлива кратка відповідь замість помилки
+                    try:
+                        await callback.answer("⏳ Подожди немного...", show_alert=False)
+                    except Exception as inner:
+                        pass
+                    return None
+                raise
 
         return wrapper
 
@@ -440,10 +466,14 @@ def get_status(status_id) -> str:
         return STATUSES[status_id]
 
 
+def gadmins():
+    return json.load(open("admins_data.json", encoding="utf-8"))["admins"]
+
+
 # -------------- HANDLERS -------------- #
 
 
-# @dp.message(lambda message: message.from_user.id not in ADMINS and int(bot.id) == 8375492513)
+@dp.message(lambda message: message.from_user.id not in ADMINS and int(bot.id) == 8375492513)
 async def handle_message(message: Message):
     return await message.answer(
         f"В тестовом боте могуть работать только админы!\n\nРазработчик: t.me/sollamon (по вопросам чтобы стать админом писать {html.link("сюда [тык]", "t.me/sollamon")})",
@@ -467,6 +497,667 @@ async def handle_banned(message: Message):
     await message.reply(text, reply_markup=kb)
 
 
+# -------------- EVENT -------------- #
+
+@dp.message(F.text.startswith("/event"))
+async def handle_event(message: Message):
+    user_id = message.from_user.id
+    name = message.from_user.first_name
+
+    kb = InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text="🎃 Завод Тыкв", callback_data=f"event_halloween:{user_id}")]])
+
+    await message.answer(
+        f"🎟️ {await gsname(name, user_id)}, добро пожаловать в меню ивента!\n{gline()}\n\n🎃 {html.bold("Текущее событие")}: <i>Хеллоуин</i>\n<b>❓ Описание:</b> {html.italic("Стройте и улучшайте свой завод тыкв! Получайте призы за продажи тыкв!")}",
+        reply_markup=kb)
+
+
+@dp.callback_query(F.data.startswith("event_halloween:"))
+async def handle_event_halloween(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    name = callback.from_user.first_name
+
+    if int(user_id) != int(callback.data.split(":")[1]):
+        return await callback.answer("Это не твоя кнопка!")
+
+    data = await load_data(user_id)
+    if not data:
+        await create_user_data(user_id)
+        data = await load_data(user_id)
+
+    if not data.get("event_halloween_factory"):
+        await callback.message.edit_text("😅 У вас еще нету завода тыкв!", reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🔥 Построить завод", callback_data=f"create_pumpkin_factory:{user_id}")]]))
+
+    factory = data["event_halloween_factory"]
+    level = factory["level"]
+    pumpkins = factory["pumpkins"]
+    last_claim = factory["last_claim"]
+
+    now = datetime.now(timezone.utc)
+
+    last_claim_iso = factory.get("last_claim")
+    parsed_time = None
+
+    if last_claim_iso:
+        try:
+            parsed_time = datetime.fromisoformat(last_claim_iso)
+            if parsed_time.tzinfo is None:
+                parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+        except Exception:
+            # якщо формат некоректний — скидати в now (щоб не видати помилкові тику)
+            parsed_time = now
+    else:
+        # якщо last_claim відсутній — спробуємо використати created_at (якщо ви зберігаєте)
+        created_iso = factory.get("created_at")
+        if created_iso:
+            try:
+                parsed_time = datetime.fromisoformat(created_iso)
+                if parsed_time.tzinfo is None:
+                    parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+            except Exception:
+                parsed_time = now
+        else:
+            # немає ні last_claim, ні created_at — завод щойно створено або дані старі
+            # збережемо last_claim = now і дамо 0 pending
+            factory["last_claim"] = now.isoformat()
+            await save_data(user_id, data)
+            pumpkins_pending = 0
+
+    # якщо parsed_time ініціалізовано — порахувати накопичення
+    if 'pumpkins_pending' not in locals():
+        if parsed_time:
+            seconds = (now - parsed_time).total_seconds()
+            if seconds < 0:
+                seconds = 0
+
+            # обмеження на максимальне накопичення (наприклад 7 днів) — опціонально
+            # max_seconds = 3600 * 24 * 7
+            # if seconds > max_seconds:
+            #     seconds = max_seconds
+
+            pumpkins_per_hour = level * 100  # ваша формула
+            pumpkins_pending = int(seconds * (pumpkins_per_hour / 3600.0))
+
+            # якщо хочете — оновлюємо last_claim лише після реального забору,
+            # тому тут залишаємо last_claim незмінним (ми оновимо його нижче після додавання)
+        else:
+            pumpkins_pending = 0
+
+    cost = level * 100000
+    creating_pumpkins_per_hour = level * 100
+    text = f"🔥 Завод тыкв\n{gline()}\n🌟 Уровень: {level}\n🎃 Тыкв: {pumpkins}\n🎃 На заводе: {pumpkins_pending}\n💰 Стоимость улучшения: {format_balance(cost)} mDrops / {creating_pumpkins_per_hour} тыкв в час"
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔥 Собрать тыквы", callback_data=f"claim_pumpkins:{user_id}"),
+         InlineKeyboardButton(text=f"🔥 Улучшить завод [{format_balance(cost)} mDrops]",
+                              callback_data=f"upgrade_pumpkin_factory:{user_id}")],
+        [InlineKeyboardButton(text="🛍 Магазин", callback_data=f"pumpkins_shop:{user_id}")]])
+    await callback.message.edit_text(text, reply_markup=kb)
+
+
+@dp.callback_query(F.data.startswith("create_pumpkin_factory:"))
+async def handle_create_pumpkin_factory(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    name = callback.from_user.first_name
+
+    data = await load_data(user_id)
+    if not data:
+        await create_user_data(user_id)
+        data = await load_data(user_id)
+
+    if int(user_id) != int(callback.data.split(":")[1]):
+        return await callback.answer("Это не твоя кнопка!")
+
+    if data.get("event_halloween_factory"):
+        return await callback.answer("У вас уже есть завод тыкв!")
+
+    data["event_halloween_factory"] = {
+        "level": 1,
+        "pumpkins": 0,
+        "last_claim": None,
+    }
+    await save_data(user_id, data)
+    await callback.message.edit_text("🔥 Вы успешно построили завод тыкв!", reply_markup=InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🔥 Перейти в завод", callback_data=f"pumpkin_factory_menu:{user_id}")]]))
+
+
+@dp.callback_query(F.data.startswith("pumpkin_factory_menu:"))
+async def handle_pumpkin_factory_menu(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    name = callback.from_user.first_name
+
+    if int(user_id) != int(callback.data.split(":")[1]):
+        return await callback.answer("Это не твоя кнопка!")
+
+    data = await load_data(user_id)
+    if not data:
+        await create_user_data(user_id)
+        data = await load_data(user_id)
+
+    if not data.get("event_halloween_factory"):
+        return await callback.answer("У вас нет завода тыкв!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔥 Построить завод", callback_data=f"create_pumpkin_factory:{user_id}")]]))
+
+    factory = data["event_halloween_factory"]
+    level = factory["level"]
+    pumpkins = factory["pumpkins"]
+    last_claim = factory["last_claim"]
+
+    now = datetime.now(timezone.utc)
+
+    last_claim_iso = factory.get("last_claim")
+    parsed_time = None
+
+    if last_claim_iso:
+        try:
+            parsed_time = datetime.fromisoformat(last_claim_iso)
+            if parsed_time.tzinfo is None:
+                parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+        except Exception:
+            # якщо формат некоректний — скидати в now (щоб не видати помилкові тику)
+            parsed_time = now
+    else:
+        # якщо last_claim відсутній — спробуємо використати created_at (якщо ви зберігаєте)
+        created_iso = factory.get("created_at")
+        if created_iso:
+            try:
+                parsed_time = datetime.fromisoformat(created_iso)
+                if parsed_time.tzinfo is None:
+                    parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+            except Exception:
+                parsed_time = now
+        else:
+            # немає ні last_claim, ні created_at — завод щойно створено або дані старі
+            # збережемо last_claim = now і дамо 0 pending
+            factory["last_claim"] = now.isoformat()
+            await save_data(user_id, data)
+            pumpkins_pending = 0
+
+    # якщо parsed_time ініціалізовано — порахувати накопичення
+    if 'pumpkins_pending' not in locals():
+        if parsed_time:
+            seconds = (now - parsed_time).total_seconds()
+            if seconds < 0:
+                seconds = 0
+
+            # обмеження на максимальне накопичення (наприклад 7 днів) — опціонально
+            # max_seconds = 3600 * 24 * 7
+            # if seconds > max_seconds:
+            #     seconds = max_seconds
+
+            pumpkins_per_hour = level * 100  # ваша формула
+            pumpkins_pending = int(seconds * (pumpkins_per_hour / 3600.0))
+
+            # якщо хочете — оновлюємо last_claim лише після реального забору,
+            # тому тут залишаємо last_claim незмінним (ми оновимо його нижче після додавання)
+        else:
+            pumpkins_pending = 0
+
+    cost = level * 100000
+    creating_pumpkins_per_hour = level * 100
+    text = f"🔥 Завод тыкв\n{gline()}\n🌟 Уровень: {level}\n🎃 Тыкв: {pumpkins}\n🎃 На заводе: {pumpkins_pending}\n💰 Стоимость улучшения: {format_balance(cost)} mDrops / {creating_pumpkins_per_hour} тыкв в час"
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔥 Собрать тыквы", callback_data=f"claim_pumpkins:{user_id}"),
+         InlineKeyboardButton(text=f"🔥 Улучшить завод [{format_balance(cost)} mDrops]",
+                              callback_data=f"upgrade_pumpkin_factory:{user_id}")],
+        [InlineKeyboardButton(text="🛍 Магазин", callback_data=f"pumpkins_shop:{user_id}")]])
+    await callback.message.edit_text(text, reply_markup=kb)
+
+
+@dp.callback_query(F.data.startswith("upgrade_pumpkin_factory:"))
+async def handle_upgrade_pumpkin_factory(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    name = callback.from_user.first_name
+
+    if int(user_id) != int(callback.data.split(":")[1]):
+        return await callback.answer("Это не твоя кнопка!")
+
+    data = await load_data(user_id)
+
+    if not data.get("event_halloween_factory"):
+        return await callback.answer("У вас нет завода тыкв!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔥 Построить завод", callback_data=f"create_pumpkin_factory:{user_id}")]]))
+
+    factory = data["event_halloween_factory"]
+    level = factory["level"]
+    pumpkins = factory["pumpkins"]
+
+    if level >= 10:
+        return await callback.answer("У вас максимальный уровень завода тыкв!")
+
+    cost = level * 100000
+
+    if data.get("coins", 0) < cost:
+        return await callback.answer("У вас недостаточно монет для улучшения завода тыкв!")
+
+    data["coins"] -= cost
+    factory["level"] += 1
+
+    await save_data(user_id, data)
+    await callback.message.edit_text(f"🔥 Вы успешно улучшили завод тыкв на {level} уровень!",
+                                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                         [InlineKeyboardButton(text="🔥 Перейти в завод",
+                                                               callback_data=f"pumpkin_factory_menu:{user_id}")]]))
+
+
+@dp.callback_query(F.data.startswith("claim_pumpkins:"))
+async def handle_claim_pumpkins(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    name = callback.from_user.first_name
+
+    if int(user_id) != int(callback.data.split(":")[1]):
+        return await callback.answer("Это не твоя кнопка!")
+
+    data = await load_data(user_id)
+    if not data:
+        await create_user_data(user_id)
+        data = await load_data(user_id)
+
+    if not data.get("event_halloween_factory"):
+        return await callback.answer("У вас нет завода тыкв!", reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🔥 Построить завод", callback_data=f"create_pumpkin_factory:{user_id}")]]))
+
+    factory = data["event_halloween_factory"]
+    level = factory["level"]
+    pumpkins = factory["pumpkins"]
+    last_claim = factory["last_claim"]
+
+    now = datetime.now(timezone.utc)
+
+    last_claim_iso = factory.get("last_claim")
+    parsed_time = None
+
+    if last_claim_iso:
+        try:
+            parsed_time = datetime.fromisoformat(last_claim_iso)
+            if parsed_time.tzinfo is None:
+                parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+        except Exception:
+            # якщо формат некоректний — скидати в now (щоб не видати помилкові тику)
+            parsed_time = now
+    else:
+        # якщо last_claim відсутній — спробуємо використати created_at (якщо ви зберігаєте)
+        created_iso = factory.get("created_at")
+        if created_iso:
+            try:
+                parsed_time = datetime.fromisoformat(created_iso)
+                if parsed_time.tzinfo is None:
+                    parsed_time = parsed_time.replace(tzinfo=timezone.utc)
+            except Exception:
+                parsed_time = now
+        else:
+            # немає ні last_claim, ні created_at — завод щойно створено або дані старі
+            # збережемо last_claim = now і дамо 0 pending
+            factory["last_claim"] = now.isoformat()
+            await save_data(user_id, data)
+            pumpkins_pending = 0
+
+    # якщо parsed_time ініціалізовано — порахувати накопичення
+    if 'pumpkins_pending' not in locals():
+        if parsed_time:
+            seconds = (now - parsed_time).total_seconds()
+            if seconds < 0:
+                seconds = 0
+
+            # обмеження на максимальне накопичення (наприклад 7 днів) — опціонально
+            # max_seconds = 3600 * 24 * 7
+            # if seconds > max_seconds:
+            #     seconds = max_seconds
+
+            pumpkins_per_hour = level * 100  # ваша формула
+            pumpkins_pending = int(seconds * (pumpkins_per_hour / 3600.0))
+
+            # якщо хочете — оновлюємо last_claim лише після реального забору,
+            # тому тут залишаємо last_claim незмінним (ми оновимо його нижче після додавання)
+        else:
+            pumpkins_pending = 0
+
+    if pumpkins_pending <= 0:
+        return await callback.answer("У вас нет тыкв для сбора!")
+
+    factory["pumpkins"] += pumpkins_pending
+    factory["pumpkins_pending"] = 0
+    factory["last_claim"] = datetime.now().isoformat()
+    await save_data(user_id, data)
+
+    await callback.message.edit_text(f"🔥 Вы успешно собрали {pumpkins_pending} тыкв!",
+                                     reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                         [InlineKeyboardButton(text="🔥 Перейти в завод",
+                                                               callback_data=f"pumpkin_factory_menu:{user_id}")]]))
+
+
+UUH = "😒"
+
+
+@dp.callback_query(F.data.startswith("pumpkins_shop"))
+async def pumpkins_shop(cb: CallbackQuery):
+    user_id = cb.from_user.id
+    name = cb.from_user.first_name
+
+    if int(cb.data.split(":")[1]) != int(user_id):
+        return await cb.answer("Это не твоя кнопка!")
+
+    data = await load_data(user_id)
+    if not data:
+        await create_user_data(user_id)
+        data = await load_data(user_id)
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔄 mDrops", callback_data=f"buy_with_pumpkins:mdrops:{user_id}"),
+         InlineKeyboardButton(text="🔄 GGs", callback_data=f"buy_with_pumpkins:ggs:{user_id}")],
+        [InlineKeyboardButton(text="1️⃣", callback_data=f"buy_with_pumpkins:1:{user_id}"),
+         InlineKeyboardButton(text="2️⃣", callback_data=f"buy_with_pumpkins:2:{user_id}"),
+         InlineKeyboardButton(text="3️⃣", callback_data=f"buy_with_pumpkins:3:{user_id}")],
+        [InlineKeyboardButton(text="4️⃣", callback_data=f"buy_with_pumpkins:4:{user_id}"),
+         InlineKeyboardButton(text="5️⃣", callback_data=f"buy_with_pumpkins:5:{user_id}"),
+         InlineKeyboardButton(text="6️⃣", callback_data=f"buy_with_pumpkins:6:{user_id}")],
+        [InlineKeyboardButton(text="7️⃣", callback_data=f"buy_with_pumpkins:7:{user_id}"),
+         InlineKeyboardButton(text="8️⃣", callback_data=f"buy_with_pumpkins:8:{user_id}")],
+        [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{user_id}")]])
+    await cb.message.edit_text(f"""🛍 <b>{await gsname(name, user_id)}</b>, добро пожаловать в магазин!
+{gline()}
+🔄 Курс обмена в mDrops:
+ • 1 тыква = 7 mDrops
+🔄 Курс обмена в GGs:
+ • 400 тыкв = 1 GG
+
+{gline()}
+🛒 Магазин призов:
+1️⃣ 150 🎃 ➡ 1 бронзовый кейс
+2️⃣ 750 🎃 ➡ 1 серебряный кейс
+3️⃣ 3000 🎃 ➡ 1 золотой кейс
+4️⃣ 15000 🎃 ➡ 1 алмазный кейс
+
+5️⃣ 7500 🎃 ➡ статус "🪬 Фантом"
+6️⃣ 15000 🎃 ➡ статус "🔑 Легенда"
+7️⃣ 45000 🎃 ➡ статус "💎 Багач"
+8️⃣ <s>100000</s> 75000 🎃 ➡ статус "🎭 Пранкер" 💎  <tg-spoiler>(УЖЕ НЕ ДОСТУПЕН В /shop)</tg-spoiler>
+""", reply_markup=kb)
+
+
+hw_prizes = {
+    1: ["1 бронзовый кейс", 150],
+    2: ["1 серебряный кейс", 750],
+    3: ["1 золотой кейс", 3000],
+    4: ["1 алмазный кейс", 15000],
+    5: ["статус \"🪬 Фантом\"", 7500],
+    6: ["статус \"🔑 Легенда\"", 15000],
+    7: ["статус \"💎 Багач\"", 45000],
+    8: ["статус \"🎭 Пранкер\"", 75000]
+}
+
+
+class TradePumpkinsStates(StatesGroup):
+    waiting_in_mdrops = State()
+    waiting_in_ggs = State()
+
+
+@dp.callback_query(F.data.startswith("buy_with_pumpkins"))
+async def buy_with_pumpkins(cb: CallbackQuery, state: FSMContext):
+    uid = cb.from_user.id
+    name = cb.from_user.first_name
+
+    if int(cb.data.split(":")[2]) != int(uid):
+        return await cb.answer("Это не твоя кнопка!")
+
+    choose = cb.data.split(":")[1]
+
+    data = await load_data(uid)
+
+    if not choose.isdigit():
+        if choose == "mdrops":
+            pumpkins = data["event_halloween_factory"]["pumpkins"]
+            if pumpkins < 7:
+                return await cb.message.edit_text(
+                    f"{UUH} {await gsname(name, uid)}, тебе не хватает тыкв для обмена!\n\n🎃 Твои тыквы: {pumpkins}",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]]))
+
+            await cb.message.edit_text(
+                f"📲 Введи количетсов тыкв для обмена или напиши \"все\" для того чтобы обменять все!\n\n🎃 Твои тыквы: {pumpkins}")
+            return await state.set_state(TradePumpkinsStates.waiting_in_mdrops)
+
+        elif choose == "ggs":
+            pumpkins = data["event_halloween_factory"]["pumpkins"]
+            if pumpkins < 400:
+                return await cb.message.edit_text(
+                    f"{UUH} {await gsname(name, uid)}, тебе не хватает тыкв для обмена!\n\n🎃 Твои тыквы: {pumpkins}",
+                    reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                        [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]]))
+
+            await cb.message.edit_text(
+                f"📲 Введи количетсов тыкв для обмена или напиши \"все\" для того чтобы обменять все!\n\n🎃 Твои тыквы: {pumpkins}")
+            return await state.set_state(TradePumpkinsStates.waiting_in_ggs)
+
+    else:
+        pumpkins = data["event_halloween_factory"]["pumpkins"]
+        if pumpkins >= hw_prizes[int(choose)][1]:
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="✅ Подтвердить", callback_data=f"confirm_trade_pumpkins:{choose}:{uid}")],
+                [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]])
+            await cb.message.edit_text(
+                f"✅ {await gsname(name, uid)}, подтверди покупку.\n\n🔗 Товар: {hw_prizes[int(choose)][0]}\n💰 Цена: {hw_prizes[int(choose)][1]}\n🎃 Твои тыквы: {pumpkins}",
+                reply_markup=kb)
+        else:
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]])
+            await cb.message.edit_text(
+                f"❌ {await gsname(name, uid)}, тебе не хватает {abs(int(hw_prizes[int(choose)][1]) - int(pumpkins))} тыкв.\n\n🔗 Товар: {hw_prizes[int(choose)][0]}\n💰 Цена: {hw_prizes[int(choose)][1]}\n🎃 Твои тыквы: {pumpkins}",
+                reply_markup=kb)
+
+
+@dp.callback_query(F.data.startswith("confirm_trade_pumpkins"))
+async def confirm_trade_pumpkins(cb: CallbackQuery):
+    uid = cb.from_user.id
+    name = cb.from_user.first_name
+
+    # защита кнопки
+    parts = cb.data.split(":")
+    if int(parts[2]) != int(uid):
+        return await cb.answer("Это не твоя кнопка!")
+
+    choose = int(parts[1])
+
+    data = await load_data(uid)
+    if not data:
+        await create_user_data(uid)
+        data = await load_data(uid)
+
+    pumpkins = int(data.get("event_halloween_factory", {}).get("pumpkins", 0))
+    # Правильно берем цену из hw_prizes
+    try:
+        price = int(hw_prizes[choose][1])
+    except Exception:
+        return await cb.message.edit_text("❌ Ошибка: неверный выбор товара.",
+                                          reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                              [InlineKeyboardButton(text=BACK,
+                                                                    callback_data=f"pumpkin_factory_menu:{uid}")]
+                                          ]))
+
+    if pumpkins < price:
+        return await cb.message.edit_text(
+            f"{UUH} {await gsname(name, uid)}, тебе не хватает {price - pumpkins} тыкв!",
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]
+            ])
+        )
+
+    # Списываем тыквы
+    data.setdefault("event_halloween_factory", {})["pumpkins"] = pumpkins - price
+
+    # Если выбран пункт 1..4 — выдаём кейс
+    if choose <= 4:
+        # соответствие пунктов -> ключи кейсов
+        choose_to_case = {
+            1: "bronze",
+            2: "silver",
+            3: "gold",
+            4: "diamond"
+        }
+        case_key = choose_to_case.get(choose)
+        if not case_key:
+            return await cb.message.edit_text("❌ Ошибка при выдаче кейса.",
+                                              reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                                  [InlineKeyboardButton(text=BACK,
+                                                                        callback_data=f"pumpkin_factory_menu:{uid}")]
+                                              ]))
+
+        inventory = data.setdefault("cases", {})
+        inventory[case_key] = inventory.get(case_key, 0) + 1
+        await save_data(uid, data)
+
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]])
+        return await cb.message.edit_text(
+            f"✅ Вы получили {CASES[case_key]['emoji']} <b>{CASES[case_key]['name']}</b>!\n\n"
+            f"🎃 Осталось тыкв: {data['event_halloween_factory']['pumpkins']}",
+            reply_markup=kb,
+            parse_mode="HTML"
+        )
+
+    # Иначе — выдаём статус (пункты 5..8)
+    else:
+        # hw_prizes[choose][0] выглядит как 'статус \"🪬 Фантом\"'
+        raw = hw_prizes.get(choose, [None, None])[0]
+        # пытаемся извлечь название между кавычками
+        status_name = None
+        if raw:
+            parts_raw = raw.split('"')
+            if len(parts_raw) >= 2:
+                status_name = parts_raw[1]
+            else:
+                # fallback — весь текст
+                status_name = raw
+
+        if not status_name:
+            return await cb.message.edit_text("❌ Ошибка при выдаче статуса.",
+                                              reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+                                                  [InlineKeyboardButton(text=BACK,
+                                                                        callback_data=f"pumpkin_factory_menu:{uid}")]
+                                              ]))
+
+        statuses = data.setdefault("statuses", [])
+        if status_name in statuses:
+            msg = f"ℹ️ У вас уже есть статус {status_name}."
+        else:
+            statuses.append(status_name)
+            await save_data(uid, data)
+            msg = f"✅ Вы получили статус {status_name}!"
+
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]])
+        return await cb.message.edit_text(
+            f"{msg}\n\n🎃 Осталось тыкв: {data['event_halloween_factory']['pumpkins']}",
+            reply_markup=kb
+        )
+
+
+@dp.message(TradePumpkinsStates.waiting_in_mdrops)
+async def process_mdrops_exchange(message: Message, state: FSMContext):
+    uid = message.from_user.id
+    text = message.text.strip().lower()
+
+    data = await load_data(uid)
+    if not data:
+        await create_user_data(uid)
+        data = await load_data(uid)
+
+    pumpkins = int(data.get("event_halloween_factory", {}).get("pumpkins", 0))
+
+    # "все" или число
+    if text in ("все", "всі", "all"):
+        amount = pumpkins
+    else:
+        if not text.isdigit():
+            return await message.answer("❗ Введи число (количество тыкв для обмена) или «все».")
+        amount = int(text)
+
+    if amount <= 0:
+        return await message.answer("❗ Введи положительное число.")
+    if amount > pumpkins:
+        return await message.answer(f"❌ У тебя нет столько тыкв. У тебя: {pumpkins} 🎃")
+
+    # курс 1 🎃 -> 7 mDrops
+    mdrops_amount = amount * 7
+
+    data.setdefault("event_halloween_factory", {})["pumpkins"] = pumpkins - amount
+    data["coins"] = data.get("coins", 0) + mdrops_amount
+    await save_data(uid, data)
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]
+    ])
+
+    await message.answer(
+        f"✅ Обмен успешен!\n\n🎃 Потрачено: {amount} 🎃 → {mdrops_amount} mDrops\n"
+        f"🎃 Осталось: {data['event_halloween_factory']['pumpkins']} 🎃\n"
+        f"💰 Твои mDrops: {format_balance(data['coins'])}",
+        reply_markup=kb
+    )
+
+    await state.clear()
+
+
+@dp.message(TradePumpkinsStates.waiting_in_ggs)
+async def process_ggs_exchange(message: Message, state: FSMContext):
+    uid = message.from_user.id
+    text = message.text.strip().lower()
+
+    data = await load_data(uid)
+    if not data:
+        await create_user_data(uid)
+        data = await load_data(uid)
+
+    pumpkins = int(data.get("event_halloween_factory", {}).get("pumpkins", 0))
+
+    # "все" или число
+    if text in ("все", "всі", "all"):
+        amount = pumpkins
+    else:
+        if not text.isdigit():
+            return await message.answer("❗ Введи число (количество тыкв для обмена) или «все».")
+        amount = int(text)
+
+    if amount <= 0:
+        return await message.answer("❗ Введи положительное число.")
+    if amount > pumpkins:
+        return await message.answer(f"❌ У тебя нет столько тыкв. У тебя: {pumpkins} 🎃")
+
+    # 400 🎃 = 1 GG
+    possible_ggs = amount // 400
+    used_pumpkins = possible_ggs * 400
+    leftover = amount - used_pumpkins
+
+    if possible_ggs <= 0:
+        return await message.answer("❌ Для обмена на GG нужно минимум 400 🎃 (или введи количество, кратное 400).")
+
+    data["ggs"] = data.get("ggs", 0) + possible_ggs
+    data.setdefault("event_halloween_factory", {})["pumpkins"] = pumpkins - used_pumpkins
+    await save_data(uid, data)
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text=BACK, callback_data=f"pumpkin_factory_menu:{uid}")]
+    ])
+
+    msg = (
+        f"✅ Обмен успешен!\n\n"
+        f"🎃 Потрачено: {used_pumpkins} 🎃 → {possible_ggs} GG(ов)\n"
+        f"🎃 Осталось: {data['event_halloween_factory']['pumpkins']} 🎃\n"
+        f"🏷️ Твои GGs: {int(data['ggs'])}"
+    )
+    if leftover > 0:
+        msg += f"\n\nℹ️ Часть введённых тыкв ({leftover} 🎃) не была использована, потому что обмен возможен только от 400 🎃 за 1 GG."
+
+    await message.answer(msg, reply_markup=kb)
+    await state.clear()
+
+
+# -------------- MAIN -------------- #
+
 @dp.message(F.text.startswith("/start"))
 async def start_command(message: Message):
     try:
@@ -479,10 +1170,9 @@ async def start_command(message: Message):
             await create_user_data(message.from_user.id)
             data = await load_data(str(message.from_user.id))
 
-        # 🎟️ Обробка чеку
         if arg and arg.startswith("check_"):
             code = arg.split("check_")[1]
-            check = load_check(code)  # ✅ замість data.get("checks")
+            check = load_check(code)
 
             if not check:
                 return await message.answer("❗ Неверный код чека.")
@@ -491,14 +1181,12 @@ async def start_command(message: Message):
             if check["remaining"] <= 0:
                 return await message.answer("❗ Этот чек больше не действителен.")
 
-            # Додаємо кошти користувачу
             data["coins"] += check["per_user"]
             check.setdefault("claimed", []).append(user_id)
             check["remaining"] -= 1
             await save_data(user_id, data)
-            save_check(code, check)  # ✅ треба оновити чек у БД
+            save_check(code, check)
 
-            # Повідомляємо творця чека
             creator_id = check.get("creator_id")
             if creator_id:
                 try:
@@ -511,12 +1199,10 @@ async def start_command(message: Message):
                 except:
                     pass
 
-            return await message.answer(
-                f"🤑 Вы получили <b>{format_balance(int(check['per_user']))}</b> mDrops по чеку!")
+            return await message.answer(f"🤑 Вы получили {check['per_user']} mDrops по чеку!")
 
         referral = arg if arg and not arg.startswith("check_") else None
         if referral and referral != user_id:
-            # якщо користувач новий (тільки що створений)
             if data.get("ref_activated", False) is False:
                 ref_data = await load_data(referral)
                 if ref_data:
@@ -524,22 +1210,21 @@ async def start_command(message: Message):
                     ref_data["referrals"] = ref_data.get("referrals", 0) + 1
                     await save_data(referral, ref_data)
                     try:
-                        await bot.send_message(referral, "<b>🎉 У вас новый реферал!</b>\n\n<i>+2500 mDrops.</i>")
+                        await bot.send_message(referral, "🎉 У вас новый реферал! +2500 mDrops.")
                     except:
                         pass
 
-                # позначаємо що цей юзер вже активував реферал
                 data["ref_activated"] = True
                 await save_data(user_id, data)
 
-        # Зберігаємо або оновлюємо свого користувача
         if await load_data(user_id) != data:
             await save_data(user_id, data)
 
         kb = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="💭 Добавить бота в чат", url="https://t.me/gmegadbot?startgroup=start")],
             [InlineKeyboardButton(text="📣 Новости", url="t.me/saycursed"),
-             InlineKeyboardButton(text="🟢 Наш чат", url="t.me/saycurse")]])
+             InlineKeyboardButton(text="🟢 Наш чат", url="t.me/saycurse")],
+            [InlineKeyboardButton(text="📱 WebApp", url="https://t.me/gmegadbot/gmegadapp")]])
 
         try:
             await message.answer_photo(
@@ -584,17 +1269,298 @@ async def start_command(message: Message):
 @dp.message(F.text.lower().in_(["б", "баланс", "/balance", "/balance@gmegadbot"]))
 async def handle_balance(message: Message):
     try:
-        user_id = message.from_user.id
+        user_id = str(message.from_user.id)
         name = message.from_user.first_name
 
         data = await load_data(user_id)
         if not data:
             await create_user_data(user_id)
-            data = await load_data(str(message.from_user.id))
+            data = await load_data(user_id)
+
+        coins = data.get("coins", 0)
+        lost = data.get("lost_coins", 0)
+
+        # собираем клавиатуру только если баланс == 0
+        kb_rows = []
+
+        if int(coins) == 0:
+            # Проверка доступности бонуса (логика повторяет hourly_bonus)
+            now = datetime.now(timezone.utc)
+            last_bonus = data.get("last_hourly_bonus")
+
+            # статус
+            try:
+                status = int(data.get("status", 0))
+            except Exception:
+                status = 0
+
+            if status == 22:
+                cooldown = timedelta(minutes=30)
+            else:
+                cooldown = timedelta(hours=1)
+
+            bonus_available = False
+            if not last_bonus:
+                bonus_available = True
+            else:
+                try:
+                    last_time = datetime.fromisoformat(last_bonus)
+                    if now - last_time >= cooldown:
+                        bonus_available = True
+                except Exception:
+                    bonus_available = True  # на всякий — разрешаем
+
+            if bonus_available:
+                kb_rows.append([InlineKeyboardButton(text="🎁 Бонус", callback_data=f"claim_bonus:{user_id}")])
+
+            # Проверка доступности барабана (логика похожа на baraban_handler)
+            baraban_ready = False
+            now_ts = time.time()
+            try:
+                # кулдаун в секундах (если нет — считаем доступным)
+                bd = data.get("baraban_cooldown")
+                if not bd or now_ts >= float(bd):
+                    # проверим подписку на канал
+                    try:
+                        member = await bot.get_chat_member(CHANNEL_ID, int(user_id))
+                        if member.status not in ("left", "kicked"):
+                            baraban_ready = True
+                    except Exception:
+                        # если не удалось проверить — не показываем кнопку (безопаснее)
+                        baraban_ready = False
+            except Exception:
+                baraban_ready = False
+
+            if baraban_ready:
+                kb_rows.append([InlineKeyboardButton(text="🍥 Барабан", callback_data=f"open_baraban:{user_id}")])
+
+        # формируем markup, если есть строки
+        reply_kb = None
+        if kb_rows:
+            reply_kb = InlineKeyboardMarkup(inline_keyboard=kb_rows)
+
+        # отправляем сообщение с балансом и, если нужно, с кнопками
         await message.reply(
-            f"{html.italic(f"💰 <b>{await gsname(message.from_user.first_name, message.from_user.id)}</b>, твой баланс: {format_balance(data['coins'])} mDrops")}\n{gline()}\n\n<b>🎰 Слито:</b> {format_balance(data['lost_coins'])} mDrops")
+            f"{html.italic(f'💰 {await gsname(message.from_user.first_name, message.from_user.id)}, твой баланс: {format_balance(coins)} mDrops')}\n"
+            f"{gline()}\n\n🎰 Слито: {format_balance(lost)} mDrops",
+            reply_markup=reply_kb
+        )
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 103)
+
+
+@dp.callback_query(F.data.startswith("claim_bonus:"))
+async def claim_bonus_cb(cb: CallbackQuery):
+    try:
+        parts = cb.data.split(":")
+        if len(parts) < 2:
+            return await cb.answer("Неверные данные.")
+        uid = parts[1]
+        if int(cb.from_user.id) != int(uid):
+            return await cb.answer("Это не твоя кнопка!")
+
+        data = await load_data(uid)
+        if not data:
+            await create_user_data(uid)
+            data = await load_data(uid)
+
+        # статус
+        try:
+            status = int(data.get("status", 0))
+        except Exception:
+            status = 0
+
+        # определяем cooldown и диапазон бонуса
+        if status == 22:
+            bonus_min, bonus_max = 3000, 4500
+            cooldown = timedelta(minutes=30)
+            range_desc = "3000–4500 mDrops (статус 22). КД 30 мин."
+        elif 17 <= status <= 21:
+            step = status - 17
+            bonus_min = 500 + step * 250
+            bonus_max = 750 + step * 250
+            bonus_min = min(bonus_min, 3000)
+            bonus_max = min(bonus_max, 3000)
+            cooldown = timedelta(hours=1)
+            range_desc = f"{bonus_min}–{bonus_max} mDrops (статус {status}). КД 60 мин."
+        else:
+            bonus_min, bonus_max = 50, 250
+            cooldown = timedelta(hours=1)
+            range_desc = f"{bonus_min}–{bonus_max} mDrops (обычный бонус). КД 60 мин."
+
+        now = datetime.now(timezone.utc)
+        last_bonus = data.get("last_hourly_bonus")
+        if last_bonus:
+            try:
+                last_time = datetime.fromisoformat(last_bonus)
+                if now - last_time < cooldown:
+                    remaining = cooldown - (now - last_time)
+                    minutes = math.ceil(remaining.total_seconds() / 60)
+                    return await cb.answer(f"Бонус ещё не доступен. Через {minutes} мин.", show_alert=True)
+            except Exception:
+                pass  # позволим получить бонус, если формат неверный
+
+        # проверка подписки на чат (как в hourly_bonus)
+        try:
+            member = await bot.get_chat_member(chat_id="@saycurse", user_id=int(uid))
+            if member.status in ["left", "kicked"]:
+                return await cb.answer("Чтобы получить бонус, вступи в наш чат.", show_alert=True)
+        except Exception:
+            return await cb.answer("Ошибка проверки подписки.", show_alert=True)
+
+        # выдаём бонус
+        bonus = random.randint(bonus_min, bonus_max)
+        if status not in (22,) and bonus > 3000:
+            bonus = 3000
+
+        data["coins"] = data.get("coins", 0) + bonus
+        data["last_hourly_bonus"] = now.isoformat()
+        await save_data(uid, data)
+
+        await cb.message.answer(
+            f"🎁 {await gsname(cb.from_user.first_name, int(uid))}, ты получил {bonus} mDrops!\n"
+            f"Диапазон для твоего статуса: {range_desc}\n"
+            f"Следующий бонус через {int(cooldown.total_seconds() // 60)} минут."
+        )
+        await cb.answer()  # убрать "крутилку" у кнопки
+    except Exception as e:
+        await handle_error(cb.from_user.username, e, cb.from_user.id, 104)
+
+
+@dp.callback_query(F.data.startswith("open_baraban:"))
+async def open_baraban_cb(cb: CallbackQuery):
+    try:
+        parts = cb.data.split(":")
+        if len(parts) < 2:
+            return await cb.answer("Неверные данные.")
+        uid = parts[1]
+        if int(cb.from_user.id) != int(uid):
+            return await cb.answer("Это не твоя кнопка!")
+
+        # подгружаем данные
+        if not await load_data(uid):
+            await create_user_data(uid)
+        data = await load_data(uid)
+
+        now = time.time()
+        # статус пользователя
+        try:
+            status = int(data.get("status", 0))
+        except Exception:
+            status = 0
+
+        # вычисляем кулдаун как в оригинале
+        base_cd_seconds = 12 * 3600
+        reduction_per_status = 5 * 60
+        min_cd_seconds = 40 * 60
+
+        if status == 22:
+            final_cd_seconds = 30 * 60
+            spins = 2
+        else:
+            reduction = status * reduction_per_status
+            final_cd_seconds = max(min_cd_seconds, base_cd_seconds - reduction)
+            spins = 1
+
+        # проверяем кулдаун
+        if "baraban_cooldown" in data and now < data["baraban_cooldown"]:
+            remaining = int(data["baraban_cooldown"] - now)
+            hrs = remaining // 3600
+            mins = (remaining % 3600) // 60
+            return await cb.answer(f"⏳ Следующий барабан через {hrs}ч {mins}м.", show_alert=True)
+
+        # проверка подписки на канал
+        try:
+            member = await bot.get_chat_member(CHANNEL_ID, int(uid))
+            if member.status in ("left", "kicked"):
+                kb = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="⚜️ Перейти в канал", url="https://t.me/saycursed")]
+                ])
+                return await cb.message.answer(
+                    f'❌ Подпишись на {html.link("канал", "https://t.me/saycursed")}, чтобы получить приз 🎁',
+                    disable_web_page_preview=True,
+                    reply_markup=kb
+                )
+        except Exception as e:
+            return await cb.answer(f"⚠️ Не удалось проверить подписку: {e}", show_alert=True)
+
+        # выбираем приз(ы)
+        ptype, amount, filename = choose_prize()
+        prizes = [(ptype, amount)]
+
+        if spins == 2:
+            p2, a2, f2 = choose_prize()
+            prizes.append((p2, a2))
+
+        total_coins = sum(a for t, a in prizes if t == "coins")
+        total_ggs = sum(a for t, a in prizes if t != "coins")
+
+        if total_coins:
+            data["coins"] = data.get("coins", 0) + total_coins
+        if total_ggs:
+            data["GGs"] = data.get("GGs", 0) + total_ggs
+
+        # обновляем кулдаун
+        data["baraban_cooldown"] = now + final_cd_seconds
+        await save_data(uid, data)
+
+        # отправляем "видео" / результат — аналогично твоему handler'у
+        loading_msg = await cb.message.answer("📂 Загрузка видео, ожидайте...")
+        try:
+            prize_video = FSInputFile(f"baraban_videos/{filename}.mp4")
+            initial_caption = "🎰 Крутим барабан..."
+            if spins == 2:
+                initial_caption += " (2 спина за статус \"♠️ Масть\"!)"
+
+            sent = await cb.message.answer_video(prize_video, caption=initial_caption)
+            await loading_msg.delete()
+        except Exception as e:
+            await loading_msg.delete()
+            await handle_error(cb.from_user.username, e, cb.from_user.id, 122)
+            return
+
+        # ждём для эффекта
+        await asyncio.sleep(5)
+
+        # формируем итоговый текст
+        prize_lines = []
+        for idx, (p, a) in enumerate(prizes, start=1):
+            if p == "coins":
+                prize_lines.append(f"Спин #{idx}: {format_balance(a)} mDrops")
+            else:
+                prize_lines.append(f"Спин #{idx}: {a} GG")
+        prize_text = "\n".join(prize_lines)
+
+        summary_parts = []
+        if total_coins:
+            summary_parts.append(f"{format_balance(total_coins)} mDrops")
+        if total_ggs:
+            summary_parts.append(f"{total_ggs} GG")
+        summary = " и ".join(summary_parts) if summary_parts else "ничего"
+
+        # пытаемся отредактировать подпись видео, как в оригинале
+        try:
+            await bot.edit_message_caption(
+                chat_id=cb.message.chat.id,
+                message_id=sent.message_id,
+                caption=(
+                        f"🎉 {await gsname(cb.from_user.first_name, int(uid))}, твой приз:\n{prize_text}\n\n"
+                        f"Итого: {summary}\n\n"
+                        f"КД барабана для твоего статуса ({get_status(status)}): {int(final_cd_seconds // 3600)}ч {int((final_cd_seconds % 3600) // 60)}м."
+                        + (f"\n(Статус \"♠️ Масть\" даёт 2 спина.)" if status == 22 else "")
+                )
+            )
+        except Exception:
+            await cb.message.answer(
+                f"🎉 {await gsname(cb.from_user.first_name, int(uid))}, твой приз:\n{prize_text}\n\n"
+                f"Итого: {summary}\n\n"
+                f"КД барабана для твоего статуса ({get_status(status)}): {int(final_cd_seconds // 3600)}ч {int((final_cd_seconds % 3600) // 60)}м."
+                + (f"\n(Статус \"♠️ Масть\" даёт 2 спина.)" if status == 22 else "")
+            )
+
+        await cb.answer()
+    except Exception as e:
+        await handle_error(cb.from_user.username, e, cb.from_user.id, 122)
 
 
 @dp.message(F.text.lower().in_(["п", "профиль", "/profile", "/profile@gmegadbot"]))
@@ -610,7 +1576,7 @@ async def handle_balance(message: Message):
 
         clan = data.get("clan", "нету")
         await message.reply(
-            f"<b>🆔 Профиль:</b> {html.code(message.from_user.id)}\n{gline()}\n├ 👤 <b>{html.italic(html.link(await gsname(message.from_user.first_name, message.from_user.id), f't.me/{message.from_user.username}'))}</b>\n├ ⚡️ <b>{html.italic('Статус:')}</b> {get_status(data['status'])}\n├ 🛡 {html.italic(f'<b>Клан:</b> {clan}')}\n├ 🟢 <b>{html.italic('Выиграно:')}</b> {format_balance(data['won_coins'])} mDrops\n├ 🗿 <b>{html.italic('Проиграно:')}</b> {format_balance(data['lost_coins'])} mDrops\n{gline()}\n💰 <b>{html.italic('Баланс:')}</b> {format_balance(data['coins'])} mDrops\n💎 <b>{html.italic('Баланс:')}</b> {int(data['GGs'])} GGs",
+            f"🆔 Профиль: {html.code(message.from_user.id)}\n{gline()}\n├ 👤 {html.italic(html.link(await gsname(message.from_user.first_name, message.from_user.id), f't.me/{message.from_user.username}'))}\n├ ⚡️ {html.italic('Статус:')} {get_status(data['status'])}\n├ 🛡 {html.italic(f'Клан: {clan}')}\n├ 🟢 {html.italic('Выиграно:')} {format_balance(data['won_coins'])} mDrops\n├ 🗿 {html.italic('Проиграно:')} {format_balance(data['lost_coins'])} mDrops\n{gline()}\n💰 {html.italic('Баланс:')} {format_balance(data['coins'])} mDrops\n💎 {html.italic('Баланс:')} {int(data['GGs'])} GGs",
             disable_web_page_preview=True)
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 104)
@@ -2539,16 +3505,26 @@ async def top_players(message: Message, bot: Bot):
         if total_players == 0:
             text = "<b>🏆 Топ игроков:</b>\nПока нет игроков."
         else:
-            lines = ["<b>🏆 Топ игроков:</b>"]
+            lines = ["<b>🏆 Топ игроков:</b>\n"]
             for i, (uid, coins) in enumerate(top, 1):
                 try:
                     chat = await bot.get_chat(int(uid))
-                    name = f"{await gsname(chat.first_name)} ({uid})" or await gsname(chat.username) or f"ID {uid}"
+                    name = f"<a href=\"tg://user?id=0\">{await gsname(chat.first_name)}</a>" or await gsname(
+                        chat.username) or f"ID {uid}"
                 except Exception:
                     name = f"ID {uid}"
-                lines.append(f"{i} | {name} | {format_balance(coins)} mDrops")
 
-            lines.append(f"\nВсего игроков: {total_players}")
+                if i == 1:
+                    i = "🥇 1."
+                elif i == 2:
+                    i = "🥈 2."
+                elif i == 3:
+                    i = "🥉 3."
+                else:
+                    i = f"🏅 {i}."
+                lines.append(f"{i} {name} | <code>{format_balance(coins)} mDrops</code>")
+
+            lines.append(f"\n<blockquote>Всего игроков: {total_players}</blockquote>")
             text = "\n".join(lines)
 
         # зберігаємо в кеш
@@ -8040,6 +9016,262 @@ async def handle_basketball(message: Message):
             f"❌ {await gsname(message.from_user.first_name, message.from_user.id)}, промах! Ты програл {format_balance(bet)} mDrops\nБаланс: {format_balance(data["coins"])} mDrops")
 
 
+FOOTBALL_MULTIPLIERS = {
+    "gol": 1.6,
+    "mimo": 2.2
+}
+
+
+@dp.message(F.text.lower().startswith("футбол"))
+async def handle_football(message: Message):
+    user_id = message.from_user.id
+    args = message.text.split()
+
+    if len(args) < 2:
+        return await message.reply(
+            f"{html.italic(f'🤨 {await gsname(message.from_user.first_name, user_id)}, ти ввів(ла) щось неправильно!')}\n"
+            f"{gline()}\n"
+            f"<b>Приклад:</b> {html.code('футбол 5к')}\n"
+            f"<b>Приклад:</b> {html.code('футбол 2к мимо')}"
+        )
+
+    bet_str = args[1]
+    # парсим ставку
+    if bet_str == "все":
+        data = await load_data(str(user_id))
+        if not data:
+            await create_user_data(str(user_id))
+            data = await load_data(str(user_id))
+        bet = data.get("coins", 0)
+    elif "к" in bet_str.lower():
+        bet = parse_bet_input(bet_str)
+    elif bet_str.isdigit():
+        bet = int(bet_str)
+    else:
+        return await message.reply(
+            f"{html.italic(f'🤨 {await gsname(message.from_user.first_name, user_id)}, ти ввів(ла) щось неправильно!')}\n"
+            f"{gline()}\n"
+            f"<b>Приклад:</b> {html.code('футбол 5к')}\n"
+            f"<b>Приклад:</b> {html.code('футбол 2к мимо')}"
+        )
+
+    # завантажуємо баланс
+    data = await load_data(str(user_id))
+    if not data:
+        await create_user_data(str(user_id))
+        data = await load_data(str(user_id))
+
+    balance = data.get("coins", 0)
+
+    if bet > balance:
+        return await message.reply(f"🤨 {await gsname(message.from_user.first_name, user_id)}, тобі бракує mDrops!")
+
+    if bet < 10:
+        return await message.reply(
+            f"🤨 {await gsname(message.from_user.first_name, user_id)}, мінімальна ставка - 10 mDrops!")
+
+    # списуємо ставку відразу (як і раніше) — якщо користувач відміняє, повернемо назад
+    data["coins"] = balance - bet
+    await save_data(str(user_id), data)
+
+    # якщо користувач одразу вказав результат
+    chosen = None
+    if len(args) >= 3:
+        chosen_raw = args[2].lower()
+        if chosen_raw in ("гол", "gol", "goal"):
+            chosen = "gol"
+        elif chosen_raw in ("мимо", "mimo", "miss"):
+            chosen = "mimo"
+        else:
+            chosen = None
+
+    # випадок: користувач указав вибір — показуємо анімацію, робимо паузу, видаляємо анімацію і надсилаємо результат у новому повідомленні
+    if chosen:
+        dice_msg = None
+        try:
+            dice_msg = await message.answer_dice(emoji="⚽")
+        except Exception:
+            dice_msg = None
+
+        # затримка перед результатом
+        await asyncio.sleep(3)
+
+        # видаляємо перше бот-повідомлення (анімацію), якщо воно є
+        if dice_msg is not None:
+            try:
+                await dice_msg.delete()
+            except Exception:
+                pass
+
+        # визначаємо результат (можна змінити ваги)
+        outcome = random.choices(["gol", "mimo"], weights=[50, 50], k=1)[0]
+
+        # оновлюємо дані та виплати
+        data = await load_data(str(user_id))
+        if not data:
+            await create_user_data(str(user_id))
+            data = await load_data(str(user_id))
+
+        if outcome == chosen:
+            mult = FOOTBALL_MULTIPLIERS[chosen]
+            win_amount = int(bet * mult)
+            data["coins"] = data.get("coins", 0) + win_amount
+            await save_data(str(user_id), data)
+
+            await message.answer(
+                f"⚽️ {await gsname(message.from_user.first_name, user_id)}, подія: <b>{'Гол' if outcome == 'gol' else 'Мимо'}</b> — ти вгадав(ла)! 🎉\n"
+                f"Ти виграв(ла) {format_balance(win_amount)} mDrops\n"
+                f"Баланс: {format_balance(data['coins'])} mDrops",
+                parse_mode="HTML"
+            )
+        else:
+            # програш — ставка вже списана
+            await message.answer(
+                f"❌ {await gsname(message.from_user.first_name, user_id)}, подія: <b>{'Гол' if outcome == 'gol' else 'Мимо'}</b>\n"
+                f"Ти програв(ла) ставку {format_balance(bet)} mDrops\n"
+                f"Баланс: {format_balance(data.get('coins', 0))} mDrops",
+                parse_mode="HTML"
+            )
+
+        return
+
+    # інакше — показуємо панель вибору (кнопки)
+    else:
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text=f"⚽️ Гол - {FOOTBALL_MULTIPLIERS['gol']}х",
+                                  callback_data=f"football_play:{user_id}:{bet}:gol")],
+            [InlineKeyboardButton(text=f"🥅 Мимо - {FOOTBALL_MULTIPLIERS['mimo']}х",
+                                  callback_data=f"football_play:{user_id}:{bet}:mimo")],
+            [InlineKeyboardButton(text="❌ Отменить", callback_data=f"football_cancel:{user_id}:{bet}")]
+        ])
+
+        await message.reply(
+            f"⚽️ Футбол · вибери результат!\n"
+            f"{gline()}\n"
+            f"💸 Ставка: {format_balance(bet)} mDrops",
+            reply_markup=kb
+        )
+
+
+@dp.callback_query(F.data.startswith("football_play:"))
+async def football_play(cb: CallbackQuery):
+    parts = cb.data.split(":")
+    if len(parts) < 4:
+        uid = int(parts[1])
+        if cb.from_user.id != uid:
+            return await cb.answer("Это не твоя кнопка!")
+        bet = int(parts[2])
+        data = await load_data()
+        data["coins"] += bet
+        await save_data(uid, data)
+        await cb.message.delete()
+        return await cb.answer("Ошибка, ставку возвращено, игра отменена", show_alert=True)
+
+    uid = int(parts[1])
+    bet = int(parts[2])
+    choice = parts[3]  # 'gol' або 'mimo'
+
+    # захист — кнопку натиснув не той користувач
+    if cb.from_user.id != uid:
+        return await cb.answer("Это не твоя кнопка!")
+
+    # спочатку видаляємо повідомлення з кнопками (перше повідомлення)
+    try:
+        await cb.message.delete()
+    except Exception:
+        pass
+
+    # для фану показуємо анімацію (нове тимчасове повідомлення)
+    dice_msg = None
+    try:
+        dice_msg = await cb.message.answer_dice(emoji="⚽")
+    except Exception:
+        dice_msg = None
+
+    # пауза 3 секунди
+    await asyncio.sleep(3)
+
+    # видаляємо анімацію, якщо вона була
+    if dice_msg is not None:
+        try:
+            await dice_msg.delete()
+        except Exception:
+            pass
+
+    # визначаємо результат
+    if int(dice_msg.dice.value) <= 2:
+        outcome = "mimo"
+    else:
+        outcome = "gol"
+
+    data = await load_data(str(uid))
+    if not data:
+        await create_user_data(str(uid))
+        data = await load_data(str(uid))
+
+    if outcome == choice:
+        mult = FOOTBALL_MULTIPLIERS[choice]
+        win_amount = int(bet * mult)
+        data["coins"] = data.get("coins", 0) + win_amount
+        await save_data(str(uid), data)
+
+        await cb.message.answer(
+            f"🔥 {await gsname(cb.from_user.first_name, uid)} | <b>Футбол · Победа!</b> ✅\n"
+            f"{gline()}\n"
+            f"💸 Ставка: {format_balance(bet)} mDrops\n"
+            f"🎲 Выбрано: {'Гол' if outcome == 'gol' else 'Мимо'}\n"
+            f"💰 Выигрыш: x{FOOTBALL_MULTIPLIERS[choice]} / {format_balance(win_amount)} mDrops\n"
+            f"{gline()}\n"
+            f"{html.blockquote(f"⚡️ Итог: {'Гол' if outcome == 'gol' else 'Мимо'}")}",
+            parse_mode="HTML"
+        )
+    else:
+        await cb.message.answer(
+            f"💥 {await gsname(cb.from_user.first_name, uid)} | <b>Футбол · Проигрыш!</b>\n"
+            f"{gline()}\n"
+            f"💸 Ставка: {format_balance(bet)} mDrops\n"
+            f"🎲 Выбрано: <b>{'Мимо' if outcome == 'gol' else 'Гол'}</b>\n"
+            f"{gline()}\n"
+            f"{html.blockquote(f"⚡️ Итог: {'Гол' if outcome == 'gol' else 'Мимо'}")}",
+            parse_mode="HTML"
+        )
+
+
+@dp.callback_query(F.data.startswith("football_cancel:"))
+async def football_cancel(cb: CallbackQuery):
+    parts = cb.data.split(":")
+    if len(parts) < 3:
+        return await cb.answer("Ошибка")
+
+    uid = int(parts[1])
+    bet = int(parts[2])
+
+    if cb.from_user.id != uid:
+        return await cb.answer("Это не твоя кнопка!")
+
+    # повертаємо ставку
+    data = await load_data(str(uid))
+    if not data:
+        await create_user_data(str(uid))
+        data = await load_data(str(uid))
+
+    data["coins"] = data.get("coins", 0) + bet
+    await save_data(str(uid), data)
+
+    # видаляємо повідомлення з кнопками і надсилаємо підтвердження (без затримки)
+    try:
+        await cb.message.delete()
+    except Exception:
+        pass
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text=BACK, callback_data=f"back_to_menu:{uid}")]])
+    await cb.message.answer(
+        f"ℹ️ {await gsname(cb.from_user.first_name, uid)}, ставка {format_balance(bet)} mDrops возвращена.\n"
+        f"💰 Баланс: {format_balance(data['coins'])} mDrops",
+        reply_markup=kb
+    )
+
+
 active_duels = {}
 
 
@@ -11257,13 +12489,13 @@ class CardStates(StatesGroup):
 
 
 # /mycards - список карт пользователя
-@dp.message(F.text.lower().in_(["карта", "банк"]))
+@dp.message(F.text.lower().in_(["карта", "банк", "/card", "/bank"]))
 async def cmd_my_cards(message: Message):
     if message.chat.type != "private":
         return await message.reply(
             f"🍓 {await gsname(message.from_user.first_name, message.from_user.id)}, карта дотупка только в ЛС с ботом!",
             reply_markup=InlineKeyboardMarkup(
-                inline_keyboard=[[InlineKeyboardButton(text="👉 Перйти в лс", url="t.me/gmegadbot")]]))
+                inline_keyboard=[[InlineKeyboardButton(text="👉 Перейти в лс", url="t.me/gmegadbot")]]))
 
     uid = str(message.from_user.id)
     cards = await list_cards_by_owner(uid)
@@ -11669,7 +12901,7 @@ async def handle_send_callback_log(query: CallbackQuery):
 @dp.message(Command("send_log"))
 async def handle_send_log(message: types.Message):
     user_id = message.from_user.id
-    if user_id not in ADMINS:
+    if user_id not in gadmins():
         return
 
     if message.chat.type != "private":
@@ -11735,7 +12967,7 @@ async def process_logs_page(callback: CallbackQuery):
 async def handle_clear_log(message: Message):
     user_id = message.from_user.id
 
-    if user_id in ADMINS:
+    if user_id in gadmins():
         if int(user_id) not in SPECIAL_ADMINS:
             return await message.answer("Ты не имеешь доступа к данному действию!")
         save_log({"events": []})
@@ -11805,7 +13037,7 @@ async def handle_msg_admin_send(msg: Message, state: FSMContext):
     user_id = msg.from_user.id
     name = msg.from_user.first_name
 
-    if user_id not in ADMINS:
+    if user_id not in gadmins():
         return
 
     parts = msg.text.split(" ")
@@ -12152,7 +13384,7 @@ def build_partners_page_kb(channels_slice: list, page: int, total_items: int, pa
 @dp.message(F.text == "/partners_list")
 async def partners_list_cmd(msg: Message):
     # проверяем: доступ имеют админы (ADMINS) — оставляем вашу логику
-    if not msg.from_user.id in ADMINS:
+    if not msg.from_user.id in gadmins():
         return
 
     partners = load_partners()
@@ -12178,7 +13410,7 @@ async def partners_list_cmd(msg: Message):
 @dp.callback_query(F.data.startswith("partners_list:"))
 async def partners_list_page_cb(query: CallbackQuery):
     # Только админ может пользоваться
-    if not query.from_user.id in ADMINS:
+    if not query.from_user.id in gadmins():
         return
 
     parts = query.data.split(":")
@@ -12240,7 +13472,7 @@ async def partners_finish_cb(query: CallbackQuery):
             allowed = True
     else:
         # fallback: дать право всем из ADMINS (если SPECIAL_ADMINS не задан)
-        if caller_id in ADMINS:
+        if caller_id in gadmins():
             allowed = True
 
     if not allowed:
@@ -12341,7 +13573,7 @@ async def handle_waiting_for_id_clear_data(msg: Message, state: FSMContext):
 async def handle_admin_panel(message: Message):
     user_id = message.from_user.id
 
-    if not user_id in ADMINS:
+    if not user_id in gadmins():
         return
 
     kb = InlineKeyboardMarkup(
@@ -12605,7 +13837,7 @@ async def handle_admin_data(message: Message):
 
     parts = message.text.strip().lower().split()
 
-    if user_id in ADMINS:
+    if user_id in gadmins():
         if len(parts) < 2:
             return await message.answer("❌ Использование:\n/data (ID пользователя)")
 
@@ -12626,7 +13858,7 @@ async def handle_admin_get(message: Message):
         uid = message.from_user.id
     except Exception:
         return
-    if uid not in ADMINS:
+    if uid not in gadmins():
         return
 
     parts = (message.text or "").strip().split()
@@ -12805,7 +14037,7 @@ async def handle_admin_get(message: Message):
 
 @dp.message(Command("clear_b"))
 async def admin_clear_b(message: Message):
-    if message.from_user.id not in ADMINS:
+    if message.from_user.id not in gadmins():
         return
 
     parts = (message.text or "").strip().split(maxsplit=1)
@@ -12851,7 +14083,7 @@ async def admin_clear_b(message: Message):
 async def admin_clear(message: Message):
     user_id = str(message.from_user.id)
 
-    if int(user_id) not in ADMINS:
+    if int(user_id) not in gadmins():
         return
     if int(user_id) not in SPECIAL_ADMINS:
         return await message.answer("Ты не имеешь доступа к данному действию!")
@@ -12890,7 +14122,7 @@ async def admin_clear(message: Message):
 async def handle_statuses_info(message: Message):
     user_id = message.from_user.id
 
-    if not user_id in ADMINS:
+    if not user_id in gadmins():
         return
 
     statuses_str = " • "
@@ -12912,7 +14144,7 @@ async def handle_statuses_info(message: Message):
 async def handle_new_status(message: Message):
     user_id = message.from_user.id
 
-    if not user_id in ADMINS:
+    if not user_id in gadmins():
         return
     recipient_id = str(message.reply_to_message.from_user.id)
     recipient_data = await load_data(recipient_id)
@@ -12933,7 +14165,7 @@ async def handle_new_status(message: Message):
 
 @dp.message(F.text.lower().startswith("/new_promo"))
 async def handle_new_promo(message: Message):
-    if message.from_user.id not in ADMINS:
+    if message.from_user.id not in gadmins():
         return
 
     # розбиваємо текст
@@ -13096,7 +14328,7 @@ def save_banned(data):
 
 @dp.message(Command("ban"))
 async def ban_command(message: Message):
-    if message.from_user.id not in ADMINS:
+    if message.from_user.id not in gadmins():
         return
 
     parts = message.text.split()
@@ -13127,7 +14359,7 @@ async def ban_command(message: Message):
 
 @dp.message(Command("unban"))
 async def unban_command(message: Message):
-    if message.from_user.id not in ADMINS:
+    if message.from_user.id not in gadmins():
         return
 
     parts = message.text.split()
@@ -13440,7 +14672,7 @@ async def cmd_reset_clans_items(message: types.Message):
     Если без confirm — выдаст инструкцию.
     """
     uid = message.from_user.id
-    if uid not in ADMINS:
+    if uid not in SPECIAL_ADMINS:
         return await message.reply("❌ У тебя нет прав для этой команды.")
 
     args = message.text.split(" ")
@@ -13813,25 +15045,79 @@ async def cmd_list_statuses(message: types.Message):
     await message.reply(f"📜 Уникальные статусы ({len(statuses)}):\n{lines}")
 
 
-@dp.message(Command("gdata"))
-async def send_data_db(message: types.Message):
-    # перевірка чи це адмін
-    if message.from_user.id != 8493326566:
-        return
-
+@dp.message(F.text.lower().in_(["/gtop", "идтоп", "/gtop@gmegadbot"]))
+async def top_players(message: Message, bot: Bot):
     try:
-        db_file = FSInputFile("data.db")
-        await message.answer_document(db_file, caption="📦 Ось твій файл data.db")
-    except FileNotFoundError:
-        await message.answer("⚠️ Файл data.db не знайдено!")
+        import time
+        now = time.time()
+
+        # якщо кеш ще актуальний -> віддаємо його
+        if now - TOP_CACHE["time"] < CACHE_TTL and TOP_CACHE["text"]:
+            await message.answer(TOP_CACHE["text"])
+            return
+
+        # перерахунок топу
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS json_data (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
+            """)
+            cursor.execute("SELECT key, value FROM json_data")
+            rows = cursor.fetchall()
+
+        players = []
+        for key, value in rows:
+            try:
+                data = json.loads(value)
+                coins = float(data.get("coins", 0))
+            except Exception:
+                coins = 0.0
+            players.append((key, coins))
+
+        players.sort(key=lambda x: x[1], reverse=True)
+        top = players[:10]
+        total_players = len(players)
+
+        if total_players == 0:
+            text = "<b>🏆 Топ игроков:</b>\nПока нет игроков."
+        else:
+            lines = ["<b>🏆 Топ игроков:</b>"]
+            for i, (uid, coins) in enumerate(top, 1):
+                try:
+                    chat = await bot.get_chat(int(uid))
+                    name = f"{await gsname(chat.first_name)} ({uid})" or await gsname(chat.username) or f"ID {uid}"
+                except Exception:
+                    name = f"ID {uid}"
+
+                if i == 1:
+                    i = "🥇"
+                elif i == 2:
+                    i = "🥈"
+                elif i == 3:
+                    i = "🥉"
+                else:
+                    i = "🏅"
+                lines.append(f"{i} | {name} | {format_balance(coins)} mDrops")
+
+            lines.append(f"\nВсего игроков: {total_players}")
+            text = "\n".join(lines)
+
+        # зберігаємо в кеш
+        TOP_CACHE["time"] = now
+        TOP_CACHE["text"] = text
+
+        await message.answer(text)
     except Exception as e:
-        await message.answer(f"❗ Помилка: {e}")
+        await handle_error(message.from_user.username, e, message.from_user.id, 109)
 
 
 # -------------- LAUNCH -------------- #
 
 async def main():
-    threading.Thread(target=webapp.run_flask, daemon=True).start()
+    # threading.Thread(target=webapp.run_flask, daemon=True).start()
     await send_log("Бот запущен")
     asyncio.create_task(periodic_checkpoint())
     await dp.start_polling(bot)
