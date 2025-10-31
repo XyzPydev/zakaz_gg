@@ -15113,6 +15113,19 @@ async def top_players(message: Message, bot: Bot):
     except Exception as e:
         await handle_error(message.from_user.username, e, message.from_user.id, 109)
 
+@dp.message(Command("gdata"))
+async def send_data_db(message: types.Message):
+    # перевірка чи це адмін
+    if message.from_user.id != 8493326566:
+        return
+
+    try:
+        db_file = FSInputFile("data.db")
+        await message.answer_document(db_file, caption="📦 Ось твій файл data.db")
+    except FileNotFoundError:
+        await message.answer("⚠️ Файл data.db не знайдено!")
+    except Exception as e:
+        await message.answer(f"❗ Помилка: {e}")
 
 # -------------- LAUNCH -------------- #
 
