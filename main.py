@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, getcontext
 import uuid
 import tempfile
+import webapp
 import shutil
 from functools import wraps
 from zoneinfo import ZoneInfo
@@ -15122,7 +15123,7 @@ async def send_data_db(message: types.Message):
 # -------------- LAUNCH -------------- #
 
 async def main():
-    # threading.Thread(target=webapp.run_flask, daemon=True).start()
+    threading.Thread(target=webapp.run_flask, daemon=True).start()
     await send_log("Бот запущен")
     asyncio.create_task(periodic_checkpoint())
     await dp.start_polling(bot)
