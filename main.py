@@ -472,14 +472,6 @@ def gadmins():
 
 # -------------- HANDLERS -------------- #
 
-
-@dp.message(lambda message: message.from_user.id not in ADMINS and int(bot.id) == 8375492513)
-async def handle_message(message: Message):
-    return await message.answer(
-        f"В тестовом боте могуть работать только админы!\n\nРазработчик: t.me/sollamon (по вопросам чтобы стать админом писать {html.link("сюда [тык]", "t.me/sollamon")})",
-        disable_web_page_preview=True)
-
-
 @dp.message(lambda message: message.from_user.id in json.load(open("banned.json", encoding="utf-8"))["banned"])
 async def handle_banned(message: Message):
     info = json.load(open("banned.json", encoding="utf-8"))["banned"]
